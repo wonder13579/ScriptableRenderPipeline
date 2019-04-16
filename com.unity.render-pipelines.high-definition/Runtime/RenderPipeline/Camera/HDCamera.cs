@@ -61,7 +61,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // XRTODO: double-wide cleanup
         public Vector4      textureWidthScaling; // (2.0, 0.5) for SinglePassDoubleWide (stereo) and (1.0, 1.0) otherwise
 
-        // XR instanced views (hardware-accelerated single-pass instancing or multiview)
+        // XR multipass and instanced views are supported (see XRSystem)
+        public readonly XRPass xr;
         ViewConstants[] xrViewConstants;
         ComputeBuffer   xrViewConstantsGpu;
 
@@ -151,16 +152,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public bool isMainGameView { get { return camera.cameraType == CameraType.Game && camera.targetTexture == null; } }
 
         // Helper property to inform how many views are rendered simultaneously
-        public int viewCount
-        {
-            get
-            {
-                if (camera.stereoEnabled && XRGraphics.stereoRenderingMode != XRGraphics.StereoRenderingMode.MultiPass)
-                    return 2;
-
-                return 1;
-            }
-        }
+        public int viewCount { get => Math.Max(1, xr.viewCount); }
 
         public int computePassCount
         {
@@ -248,17 +240,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             ? m_AdditionalCameraData.probeLayerMask
             : (LayerMask)~0;
 
-        static Dictionary<Camera, HDCamera> s_Cameras = new Dictionary<Camera, HDCamera>();
-        static List<Camera> s_Cleanup = new List<Camera>(); // Recycled to reduce GC pressure
+        static Dictionary<MultipassCamera, HDCamera> s_Cameras = new Dictionary<MultipassCamera, HDCamera>();
+        static List<MultipassCamera> s_Cleanup = new List<MultipassCamera>(); // Recycled to reduce GC pressure
 
-        HDAdditionalCameraData m_AdditionalCameraData;
+        HDAdditionalCameraData m_AdditionalCameraData = null; // Init in Update
 
         BufferedRTHandleSystem m_HistoryRTSystem = new BufferedRTHandleSystem();
 
         int numColorPyramidBuffersAllocated = 0;
         int numVolumetricBuffersAllocated   = 0;
 
-        public HDCamera(Camera cam)
+        public HDCamera(Camera cam, ICameraPass pass)
         {
             camera = cam;
 
@@ -268,7 +260,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             frustumPlaneEquations = new Vector4[6];
 
-            m_AdditionalCameraData = null; // Init in Update
+            // Always use a valid XR pass to simplify logic
+            xr = (pass as XRPass) ?? XRSystem.emptyPass;
 
             Reset();
         }
@@ -329,6 +322,23 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // Update viewport
             {
                 finalViewport = new Rect(camera.pixelRect.x, camera.pixelRect.y, camera.pixelWidth, camera.pixelHeight);
+
+                if (xr.enabled)
+                {
+                    // XRTODO: update viewport code once XR SDK is working
+                    if (xr.xrSdkEnabled)
+                    {
+                        finalViewport.x = 0;
+                        finalViewport.y = 0;
+                        finalViewport.width = xr.renderTargetDesc.width;
+                        finalViewport.height = xr.renderTargetDesc.height;
+                    }
+                    else
+                    {
+                        // XRTODO: support instanced views with different viewport
+                        finalViewport = xr.GetViewport();
+                    }
+                }
 
                 m_ViewportSizePrevFrame = new Vector2Int(m_ActualWidth, m_ActualHeight);
                 m_ActualWidth = Math.Max((int)finalViewport.size.x, 1);
@@ -500,8 +510,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         void GetXrViewParameters(int xrViewIndex, out Matrix4x4 proj, out Matrix4x4 view, out Vector3 cameraPosition)
         {
-            proj = camera.GetStereoProjectionMatrix((Camera.StereoscopicEye)xrViewIndex);
-            view = camera.GetStereoViewMatrix((Camera.StereoscopicEye)xrViewIndex);
+            proj = xr.GetProjMatrix(xrViewIndex);
+            view = xr.GetViewMatrix(xrViewIndex);
             cameraPosition = view.inverse.GetColumn(3);
         }
 
@@ -512,7 +522,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             var cameraPosition = camera.transform.position;
 
             // XR multipass support
-            if (camera.stereoEnabled && viewCount == 1)
+            if (xr.enabled && viewCount == 1)
                 GetXrViewParameters(0, out proj, out view, out cameraPosition);
 
             UpdateViewConstants(ref mainViewConstants, proj, view, cameraPosition, jitterProjectionMatrix);
@@ -527,7 +537,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 
             // XR instancing support
-            if (camera.stereoEnabled && viewCount > 1)
+            if (xr.instancingEnabled)
             {
                 for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
                 {
@@ -703,7 +713,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public void UpdateStereoDependentState(ref ScriptableCullingParameters cullingParams)
         {
             // XRTODO: remove this after culling management is finished
-            if (camera.stereoEnabled && viewCount > 1)
+            if (xr.instancingEnabled)
             {
                 var view = cullingParams.stereoViewMatrix;
                 var proj = cullingParams.stereoProjectionMatrix;
@@ -712,6 +722,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
+        // XRTODO: this function should not rely on camera.pixelWidth and camera.pixelHeight
         Matrix4x4 GetJitteredProjectionMatrix(Matrix4x4 origProj)
         {
             // The variance between 0 and the actual halton sequence values reveals noticeable
@@ -794,11 +805,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         // Will return NULL if the camera does not exist.
-        public static HDCamera Get(Camera camera)
+        public static HDCamera Get(MultipassCamera multipassCamera)
         {
             HDCamera hdCamera;
 
-            if (!s_Cameras.TryGetValue(camera, out hdCamera))
+            if (!s_Cameras.TryGetValue(multipassCamera, out hdCamera))
             {
                 hdCamera = null;
             }
@@ -819,10 +830,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Pass all the systems that may want to initialize per-camera data here.
         // That way you will never create an HDCamera and forget to initialize the data.
-        public static HDCamera Create(Camera camera)
+        public static HDCamera Create(MultipassCamera multipassCamera)
         {
-            HDCamera hdCamera = new HDCamera(camera);
-            s_Cameras.Add(camera, hdCamera);
+            HDCamera hdCamera = new HDCamera(multipassCamera.camera, multipassCamera.cameraPass);
+            s_Cameras.Add(multipassCamera, hdCamera);
 
             return hdCamera;
         }
