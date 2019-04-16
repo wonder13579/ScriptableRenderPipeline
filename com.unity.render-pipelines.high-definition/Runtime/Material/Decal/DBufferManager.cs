@@ -81,7 +81,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (supportsHTile) // only clear if we use it
             {
-                HDUtils.SetRenderTarget(cmd, camera, m_HTile, ClearFlag.Color, Color.clear);
+                HDUtils.SetRenderTarget(cmd, m_HTile, ClearFlag.Color, Color.clear);
             }
 
             // this actually sets the MRTs and HTile RWTexture, this is done separately because we do not have an api to clear MRTs to different colors
