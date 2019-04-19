@@ -110,6 +110,12 @@ public class TextMeshPixelSize : MonoBehaviour
     int prevSize = 8;
 
 #if UNITY_EDITOR
+
+    void Start()
+    {
+        prevPos = transform.position;
+    }
+
 	void Update()
 	{
         // Do nothing in play mode.
