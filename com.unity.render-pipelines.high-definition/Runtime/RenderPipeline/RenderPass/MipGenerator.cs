@@ -148,87 +148,87 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 );
             }
 
-                float sourceScaleX = (float)size.x / source.width;
-                float sourceScaleY = (float)size.y / source.height;
+            float sourceScaleX = (float)size.x / source.width;
+            float sourceScaleY = (float)size.y / source.height;
 
-                // Copies src mip0 to dst mip0
-                m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
-                m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(sourceScaleX, sourceScaleY, 0f, 0f));
-                m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, 0f);
-                cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
-                cmd.SetViewport(new Rect(0, 0, srcMipWidth, srcMipHeight));
-                cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+            // Copies src mip0 to dst mip0
+            m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
+            m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(sourceScaleX, sourceScaleY, 0f, 0f));
+            m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, 0f);
+            cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
+            cmd.SetViewport(new Rect(0, 0, srcMipWidth, srcMipHeight));
+            cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
 
-                int finalTargetMipWidth = destination.width;
-                int finalTargetMipHeight = destination.height;
+            int finalTargetMipWidth = destination.width;
+            int finalTargetMipHeight = destination.height;
 
-                // Note: smaller mips are excluded as we don't need them and the gaussian compute works
-                // on 8x8 blocks
-                while (srcMipWidth >= 8 || srcMipHeight >= 8)
+            // Note: smaller mips are excluded as we don't need them and the gaussian compute works
+            // on 8x8 blocks
+            while (srcMipWidth >= 8 || srcMipHeight >= 8)
+            {
+                int dstMipWidth  = Mathf.Max(1, srcMipWidth  >> 1);
+                int dstMipHeight = Mathf.Max(1, srcMipHeight >> 1);
+
+                // Scale for downsample
+                float scaleX = ((float)srcMipWidth / finalTargetMipWidth);
+                float scaleY = ((float)srcMipHeight / finalTargetMipHeight);
+
+                using (new ProfilingSample(cmd, "Downsample", CustomSamplerId.ColorPyramid.GetSampler()))
                 {
-                    int dstMipWidth  = Mathf.Max(1, srcMipWidth  >> 1);
-                    int dstMipHeight = Mathf.Max(1, srcMipHeight >> 1);
+                    // Downsample.
+                    m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, destination);
+                    m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
+                    m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, srcMipLevel);
+                    cmd.SetRenderTarget(m_TempDownsamplePyramid[rtIndex], 0, CubemapFace.Unknown, -1);
+                    cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
+                    cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 1, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                }
 
-                    // Scale for downsample
-                    float scaleX = ((float)srcMipWidth / finalTargetMipWidth);
-                    float scaleY = ((float)srcMipHeight / finalTargetMipHeight);
+                // In this mip generation process, source viewport can be smaller than the source render target itself because of the RTHandle system
+                // We are not using the scale provided by the RTHandle system for two reasons:
+                // - Source might be a planar probe which will not be scaled by the system (since it's actually the final target of probe rendering at the exact size)
+                // - When computing mip size, depending on even/odd sizes, the scale computed for mip 0 might miss a texel at the border.
+                //   This can result in a shift in the mip map downscale that depends on the render target size rather than the actual viewport
+                //   (Two rendering at the same viewport size but with different RTHandle reference size would yield different results which can break automated testing)
+                // So in the end we compute a specific scale for downscale and blur passes at each mip level.
 
-                    using (new ProfilingSample(cmd, "Downsample", CustomSamplerId.ColorPyramid.GetSampler()))
-                    {
-                        // Downsample.
-                        m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, destination);
-                        m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
-                        m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, srcMipLevel);
-                        cmd.SetRenderTarget(m_TempDownsamplePyramid[rtIndex], 0, CubemapFace.Unknown, -1);
-                        cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
-                        cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 1, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
-                    }
+                // Scales for Blur
+                float blurSourceTextureWidth = (float)m_TempDownsamplePyramid[rtIndex].rt.width; // Same size as m_TempColorTargets which is the source for vertical blur
+                float blurSourceTextureHeight = (float)m_TempDownsamplePyramid[rtIndex].rt.height;
+                scaleX = ((float)dstMipWidth / blurSourceTextureWidth);
+                scaleY = ((float)dstMipHeight / blurSourceTextureHeight);
 
-                    // In this mip generation process, source viewport can be smaller than the source render target itself because of the RTHandle system
-                    // We are not using the scale provided by the RTHandle system for two reasons:
-                    // - Source might be a planar probe which will not be scaled by the system (since it's actually the final target of probe rendering at the exact size)
-                    // - When computing mip size, depending on even/odd sizes, the scale computed for mip 0 might miss a texel at the border.
-                    //   This can result in a shift in the mip map downscale that depends on the render target size rather than the actual viewport
-                    //   (Two rendering at the same viewport size but with different RTHandle reference size would yield different results which can break automated testing)
-                    // So in the end we compute a specific scale for downscale and blur passes at each mip level.
+                // Blur horizontal.
+                using (new ProfilingSample(cmd, "Blur horizontal", CustomSamplerId.ColorPyramid.GetSampler()))
+                {
 
-                    // Scales for Blur
-                    float blurSourceTextureWidth = (float)m_TempDownsamplePyramid[rtIndex].rt.width; // Same size as m_TempColorTargets which is the source for vertical blur
-                    float blurSourceTextureHeight = (float)m_TempDownsamplePyramid[rtIndex].rt.height;
-                    scaleX = ((float)dstMipWidth / blurSourceTextureWidth);
-                    scaleY = ((float)dstMipHeight / blurSourceTextureHeight);
+                    m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid[rtIndex]);
+                    m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
+                    m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4((dstMipWidth - 0.5f) / blurSourceTextureWidth, (dstMipHeight - 0.5f) / blurSourceTextureHeight, 1.0f / blurSourceTextureWidth, 0f));
+                    m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
+                    cmd.SetRenderTarget(m_TempColorTargets[rtIndex], 0, CubemapFace.Unknown, -1);
+                    cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
+                    cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, rtIndex, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                }
 
-                    // Blur horizontal.
-                    using (new ProfilingSample(cmd, "Blur horizontal", CustomSamplerId.ColorPyramid.GetSampler()))
-                    {
+                // Blur vertical.
+                using (new ProfilingSample(cmd, "Blur vertical", CustomSamplerId.ColorPyramid.GetSampler()))
+                {
+                    m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempColorTargets[rtIndex]);
+                    m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
+                    m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4((dstMipWidth - 0.5f) / blurSourceTextureWidth, (dstMipHeight - 0.5f) / blurSourceTextureHeight, 0f, 1.0f / blurSourceTextureHeight));
+                    m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
+                    cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
+                    cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
+                    cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, rtIndex, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                }
 
-                        m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid[rtIndex]);
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4((dstMipWidth - 0.5f) / blurSourceTextureWidth, (dstMipHeight - 0.5f) / blurSourceTextureHeight, 1.0f / blurSourceTextureWidth, 0f));
-                        m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
-                        cmd.SetRenderTarget(m_TempColorTargets[rtIndex], 0, CubemapFace.Unknown, -1);
-                        cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
-                        cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, rtIndex, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
-                    }
+                srcMipLevel++;
+                srcMipWidth  = srcMipWidth  >> 1;
+                srcMipHeight = srcMipHeight >> 1;
 
-                    // Blur vertical.
-                    using (new ProfilingSample(cmd, "Blur vertical", CustomSamplerId.ColorPyramid.GetSampler()))
-                    {
-                        m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempColorTargets[rtIndex]);
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4((dstMipWidth - 0.5f) / blurSourceTextureWidth, (dstMipHeight - 0.5f) / blurSourceTextureHeight, 0f, 1.0f / blurSourceTextureHeight));
-                        m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
-                        cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
-                        cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
-                        cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, rtIndex, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
-                    }
-
-                    srcMipLevel++;
-                    srcMipWidth  = srcMipWidth  >> 1;
-                    srcMipHeight = srcMipHeight >> 1;
-
-                    finalTargetMipWidth = finalTargetMipWidth >> 1;
-                    finalTargetMipHeight = finalTargetMipHeight >> 1;
+                finalTargetMipWidth = finalTargetMipWidth >> 1;
+                finalTargetMipHeight = finalTargetMipHeight >> 1;
             }
 
             return srcMipLevel + 1;
