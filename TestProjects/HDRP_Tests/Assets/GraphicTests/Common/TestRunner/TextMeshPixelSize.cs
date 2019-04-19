@@ -78,7 +78,7 @@ public class TextMeshPixelSize : MonoBehaviour
         size = ( pixelSize + 2f ) * cameraPixelSize;
 
         textMesh.characterSize = size;
-        textMesh.fontSize = 0;
+        textMesh.fontSize = 1;
         textMesh.richText = false;
     }
 
@@ -91,16 +91,24 @@ public class TextMeshPixelSize : MonoBehaviour
         float zDistance = pos.z;
         if (zDistance < 0f ) return 1f;
 
-        float size = (targetCamera.orthographic ? targetCamera.orthographicSize * 2f : Mathf.Tan(Mathf.Deg2Rad * targetCamera.fieldOfView * .5f) * 2f * zDistance );
+        float size = (targetCamera.orthographic) ? targetCamera.orthographicSize * 2f : Mathf.Tan(Mathf.Deg2Rad * targetCamera.fieldOfView * .5f) * 2f * zDistance;
 
         return size / targetSize.y;
     }
 
 
+    Vector3 prevPos = Vector3.zero;
+    int prevSize = 8;
+
 #if UNITY_EDITOR
 	void Update()
 	{
-	    CorrectSize();
+	    if (prevPos != transform.position || prevSize != pixelSize)
+	    {
+	        prevPos = transform.position;
+	        prevSize = pixelSize;
+	        CorrectSize();
+	    }
 	}
 
     [ContextMenu("Pixel Perfect Position")]
@@ -121,8 +129,8 @@ public class TextMeshPixelSize : MonoBehaviour
 		pos.x = Mathf.Abs(pos.x);
 		pos.y = Mathf.Abs(pos.y);
 
-		pos.x = signX * ( pos.x - pos.x % cameraPixelSize ) + cameraPixelSize*0.5f;
-		pos.y = signY * ( pos.y - pos.y % cameraPixelSize );
+	    pos.x = signX * (pos.x - pos.x % cameraPixelSize) + ((targetSize.x%2 == 0)?0: cameraPixelSize*0.5f);
+		pos.y = signY * ( pos.y - pos.y % cameraPixelSize ) + ((targetSize.y%2 == 0)?0: cameraPixelSize*0.5f);;
 
 		pos = targetCamera.transform.TransformPoint(pos);
 		transform.position = pos;
