@@ -77,9 +77,18 @@ public class TextMeshPixelSize : MonoBehaviour
 
         size = ( pixelSize + 2f ) * cameraPixelSize;
 
-        textMesh.characterSize = size;
-        textMesh.fontSize = 1;
-        textMesh.richText = false;
+        if (textMesh.characterSize != 1)
+        {
+            textMesh.characterSize = 1;
+        }
+
+        transform.localScale = Vector3.one * size;
+
+        if (textMesh.font.dynamic)
+        {
+            if ( textMesh.fontSize != 1 ) textMesh.fontSize = 1;
+            if ( textMesh.richText )  textMesh.richText = false;
+        }
     }
 
     float GetCameraPixelSize()
@@ -103,6 +112,9 @@ public class TextMeshPixelSize : MonoBehaviour
 #if UNITY_EDITOR
 	void Update()
 	{
+        // Do nothing in play mode.
+        if (Application.isPlaying) return;
+
 	    if (prevPos != transform.position || prevSize != pixelSize)
 	    {
 	        prevPos = transform.position;
