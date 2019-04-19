@@ -43,7 +43,7 @@ namespace UnityEditor.TestTools.Graphics
                 case BuildTarget.tvOS:
                     return RuntimePlatform.tvOS;
 #if UNITY_2019_3_OR_NEWER
-                case BuildTarget.BJM:
+                case BuildTarget.Stadia:
                     return RuntimePlatform.Stadia;
 #endif
             }
