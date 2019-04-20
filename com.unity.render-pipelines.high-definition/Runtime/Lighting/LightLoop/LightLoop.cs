@@ -2373,6 +2373,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 m_hasRunLightListPrevFrame = runLightList;
             }
 
+            // Always build the light list in XR mode to avoid issues with multi-pass
+            if (hdCamera.xr.enabled)
+                runLightList = true;
+
             // generate screen-space AABBs (used for both fptl and clustered).
             if (m_lightCount != 0)
             {

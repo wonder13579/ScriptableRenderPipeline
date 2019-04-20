@@ -16,10 +16,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static XRDebugMode debugMode { get; set; }
         public static bool displayCompositeBorders;
         public static bool animateCompositeTiles;
-        
+
         static GUIContent[] debugModeStrings = null;
         static int[] debugModeValues = null;
-        
+
         public static void Init()
         {
             debugModeValues = (int[])Enum.GetValues(typeof(XRDebugMode));
@@ -88,7 +88,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     Object.DestroyImmediate(debugVolume);
                     debugVolume = null;
                 }
-                
+
                 return false;
             }
 
@@ -96,10 +96,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 CreateDebugVolume();
 
             Rect fullViewport = camera.pixelRect;
-            if (camera.targetTexture != null)
-            {
-                fullViewport = new Rect(0, 0, camera.targetTexture.width, camera.targetTexture.height);
-            }
 
             // Split into 4 tiles covering the original viewport
             int tileCountX = 2;
@@ -110,7 +106,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 splitRatio = 2.0f + Mathf.Sin(Time.time);
 
             // Use frustum planes to split the projection into 4 parts
-            var furstumPlanes = camera.projectionMatrix.decomposeProjection;
+            var frustumPlanes = camera.projectionMatrix.decomposeProjection;
 
             for (int tileY = 0; tileY < tileCountY; ++tileY)
             {
@@ -123,11 +119,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     float spliRatioY1 = Mathf.Pow((tileY + 0.0f) / tileCountY, splitRatio);
                     float spliRatioY2 = Mathf.Pow((tileY + 1.0f) / tileCountY, splitRatio);
 
-                    var splitPlanes = furstumPlanes;
-                    splitPlanes.left   = Mathf.Lerp(furstumPlanes.left,   furstumPlanes.right, spliRatioX1);
-                    splitPlanes.right  = Mathf.Lerp(furstumPlanes.left,   furstumPlanes.right, spliRatioX2);
-                    splitPlanes.bottom = Mathf.Lerp(furstumPlanes.bottom, furstumPlanes.top,   spliRatioY1);
-                    splitPlanes.top    = Mathf.Lerp(furstumPlanes.bottom, furstumPlanes.top,   spliRatioY2);
+                    var planes = frustumPlanes;
+                    planes.left   = Mathf.Lerp(frustumPlanes.left,   frustumPlanes.right, spliRatioX1);
+                    planes.right  = Mathf.Lerp(frustumPlanes.left,   frustumPlanes.right, spliRatioX2);
+                    planes.bottom = Mathf.Lerp(frustumPlanes.bottom, frustumPlanes.top,   spliRatioY1);
+                    planes.top    = Mathf.Lerp(frustumPlanes.bottom, frustumPlanes.top,   spliRatioY2);
 
                     float tileOffsetX = spliRatioX1 * fullViewport.width;
                     float tileOffsetY = spliRatioY1 * fullViewport.height;
@@ -135,8 +131,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     float tileSizeY = spliRatioY2 * fullViewport.height - tileOffsetY;
 
                     Rect viewport = new Rect(fullViewport.x + tileOffsetX, fullViewport.y + tileOffsetY, tileSizeX, tileSizeY);
+                    Matrix4x4 proj = camera.orthographic ? Matrix4x4.Ortho(planes.left, planes.right, planes.bottom, planes.top, planes.zNear, planes.zFar) : Matrix4x4.Frustum(planes);
 
-                    xrPass.AddView(Matrix4x4.Frustum(splitPlanes), camera.worldToCameraMatrix, viewport);
+                    xrPass.AddView(proj, camera.worldToCameraMatrix, viewport);
                     AddPassToFrame(xrPass, camera, ref multipassCameras);
                 }
             }

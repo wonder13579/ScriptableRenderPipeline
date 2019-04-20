@@ -189,19 +189,25 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         internal void StartLegacyStereo(Camera camera, CommandBuffer cmd, ScriptableRenderContext renderContext)
         {
-            if (enabled && camera.stereoEnabled)
+            if (enabled)
             {
-                // Reset scissor and viewport for C++ stereo code
-                cmd.DisableScissorRect();
-                cmd.SetViewport(camera.pixelRect);
+                // Required for some legacy shaders (text for example)
+                cmd.SetViewProjectionMatrices(GetViewMatrix(), GetProjMatrix());
 
-                renderContext.ExecuteCommandBuffer(cmd);
-                cmd.Clear();
+                if (camera.stereoEnabled)
+                {
+                    // Reset scissor and viewport for C++ stereo code
+                    cmd.DisableScissorRect();
+                    cmd.SetViewport(camera.pixelRect);
 
-                if (legacyMultipassEnabled)
-                    renderContext.StartMultiEye(camera, legacyMultipassEye);
-                else
-                    renderContext.StartMultiEye(camera);
+                    renderContext.ExecuteCommandBuffer(cmd);
+                    cmd.Clear();
+
+                    if (legacyMultipassEnabled)
+                        renderContext.StartMultiEye(camera, legacyMultipassEye);
+                    else
+                        renderContext.StartMultiEye(camera);
+                }
             }
         }
 
