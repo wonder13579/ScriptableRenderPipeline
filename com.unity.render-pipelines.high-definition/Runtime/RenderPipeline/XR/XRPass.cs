@@ -112,6 +112,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             
             passInfo.xrSdkEnabled = false;
             passInfo.tempRenderTexture = null;
+
 #if USE_XR_SDK
             passInfo.tempRenderTextureDesc = default;
 #endif
