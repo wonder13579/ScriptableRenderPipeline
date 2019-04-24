@@ -2698,10 +2698,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             if (!WillRenderContactShadow())
             {
-                cmd.SetGlobalTexture(HDShaderIDs._DeferredShadowTexture, TextureXR.GetBlackTexture());
+                cmd.SetGlobalTexture(HDShaderIDs._ContactShadowTexture, TextureXR.GetBlackTexture());
                 return;
             }
-            cmd.SetGlobalTexture(HDShaderIDs._DeferredShadowTexture, deferredShadowRT);
+            cmd.SetGlobalTexture(HDShaderIDs._ContactShadowTexture, deferredShadowRT);
         }
 
         // The first rendered 24 lights that have contact shadow enabled have a mask used to select the bit that contains
@@ -2760,7 +2760,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 // Inject the texture in the adequate slot
                 cmd.SetComputeTextureParam(screenSpaceShadowComputeShader, kernel, hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? HDShaderIDs._CameraDepthValuesTexture : HDShaderIDs._CameraDepthTexture, depthTexture);
 
-                cmd.SetComputeTextureParam(screenSpaceShadowComputeShader, kernel, HDShaderIDs._DeferredShadowTextureUAV, deferredShadowRT);
+                cmd.SetComputeTextureParam(screenSpaceShadowComputeShader, kernel, HDShaderIDs._ContactShadowTextureUAV, deferredShadowRT);
 
                 int deferredShadowTileSize = 16; // Must match DeferreDirectionalShadow.compute
                 int numTilesX = (hdCamera.actualWidth  + (deferredShadowTileSize - 1)) / deferredShadowTileSize;
