@@ -69,6 +69,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public ComputeShader volumetricLightingCS;
             [Reload("Runtime/Lighting/LightLoop/DeferredTile.shader")]
             public Shader deferredTilePS;
+            [Reload("Runtime/Lighting/Shadow/ScreenSpaceShadows.shader")]
+            public Shader screenSpaceShadowPS;
 
             [Reload("Runtime/Material/SubsurfaceScattering/SubsurfaceScattering.compute")]
             public ComputeShader subsurfaceScatteringCS;                // Disney SSS

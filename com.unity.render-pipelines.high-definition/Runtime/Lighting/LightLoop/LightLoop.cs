@@ -305,6 +305,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         private ComputeShader clearDispatchIndirectShader { get { return m_Resources.shaders.clearDispatchIndirectCS; } }
         private ComputeShader deferredComputeShader { get { return m_Resources.shaders.deferredCS; } }
         private ComputeShader contactShadowComputeShader { get { return m_Resources.shaders.contactShadowCS; } }
+        private Shader screenSpaceShadowsShader { get { return m_Resources.shaders.screenSpaceShadowPS; } }
 
         private Shader deferredTilePixelShader { get { return m_Resources.shaders.deferredTilePS; } }
 
@@ -360,6 +361,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         static ComputeBuffer s_GlobalLightListAtomic = null;
 
         static DebugLightVolumes s_lightVolumes = null;
+
+        static Material s_ScreenSpaceShadowsMat;
 
         static Material s_DeferredTileRegularLightingMat;   // stencil-test set to touch regular pixels only
         static Material s_DeferredTileSplitLightingMat;     // stencil-test set to touch split-lighting pixels only
@@ -615,6 +618,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             s_LightList = null;
             s_TileList = null;
             s_TileFeatureFlags = null;
+
+            s_ScreenSpaceShadowsMat = CoreUtils.CreateEngineMaterial(screenSpaceShadowsShader);
 
             // OUTPUT_SPLIT_LIGHTING - LIGHTLOOP_DISABLE_TILE_AND_CLUSTER - SHADOWS_SHADOWMASK - DEBUG_DISPLAY
             m_deferredLightingMaterial = new Material[16];
@@ -2765,7 +2770,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             using (new ProfilingSample(cmd, "Screen Space Shadows", CustomSamplerId.TPScreenSpaceShadows.GetSampler()))
             {
-
+                HDUtils.SetRenderTarget(cmd, deferredShadowRT);
+                HDUtils.DrawFullScreen(cmd, s_ScreenSpaceShadowsMat, deferredShadowRT);
             }
         }
 
