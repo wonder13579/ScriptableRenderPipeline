@@ -61,8 +61,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public ComputeShader buildMaterialFlagsCS;
             [Reload("Runtime/Lighting/LightLoop/Deferred.compute")]
             public ComputeShader deferredCS;
-            [Reload("Runtime/Lighting/Shadow/ScreenSpaceShadow.compute")]
-            public ComputeShader screenSpaceShadowCS;
+            [Reload("Runtime/Lighting/Shadow/ContactShadows.compute")]
+            public ComputeShader contactShadowCS;
             [Reload("Runtime/Lighting/VolumetricLighting/VolumeVoxelization.compute")]
             public ComputeShader volumeVoxelizationCS;
             [Reload("Runtime/Lighting/VolumetricLighting/VolumetricLighting.compute")]

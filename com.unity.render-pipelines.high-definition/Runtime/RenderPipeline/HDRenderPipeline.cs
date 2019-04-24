@@ -1755,7 +1755,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         m_LightLoop.PushGlobalParams(hdCamera, cmd);
 
                         // Run the contact shadow as they now need the light list
-                        RenderScreenSpaceShadows();
+                        RenderContactShadows();
                     }
                 }
                 else
@@ -1765,11 +1765,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         m_LightLoop.BuildGPULightLists(hdCamera, cmd, m_SharedRTManager.GetDepthStencilBuffer(hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA)), m_SharedRTManager.GetStencilBufferCopy(), m_SkyManager.IsLightingSkyValid());
                     }
                     
-                    RenderScreenSpaceShadows();
+                    RenderContactShadows();
                 }
                 
                 // Contact shadows needs the light loop so we do them after the build light list
-                void RenderScreenSpaceShadows()
+                void RenderContactShadows()
                 {
                     if (hdCamera.frameSettings.ContactShadowsRunAsync())
                     {
