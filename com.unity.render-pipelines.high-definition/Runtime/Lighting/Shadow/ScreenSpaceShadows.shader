@@ -9,8 +9,9 @@ Shader "Hidden/HDRP/ScreenSpaceShadows"
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
         #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Builtin/BuiltinData.hlsl"
         #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
-        #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/LightLoop/LightLoopDef.hlsl"
+        #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/NormalBuffer.hlsl"
         #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/LightLoop/HDShadow.hlsl"
+        #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/LightLoop/LightLoopDef.hlsl"
 
         struct Attributes
         {
@@ -47,11 +48,11 @@ Shader "Hidden/HDRP/ScreenSpaceShadows"
             // We also need the normal 
             NormalData normalData;
             DecodeFromNormalBuffer(posInput.positionSS.xy, normalData);
-            normalWS = normalData.normalWS;
+            float3 normalWS = normalData.normalWS;
 
             // Get directional light data. By definition we only have one directional light casting shadow
             DirectionalLightData light = _DirectionalLightDatas[_DirectionalShadowIndex];
-            return GetDirectionalShadowAttenuation(shadowContext, positionSS, posInput.positionSS.xy, posInput.positionWS, normalWS, _DirectionalShadowIndex, -light.forward);
+            return GetDirectionalShadowAttenuation(context.shadowContext, posInput.positionSS.xy, posInput.positionWS, normalWS, _DirectionalShadowIndex, -light.forward);
         }
     ENDHLSL
 

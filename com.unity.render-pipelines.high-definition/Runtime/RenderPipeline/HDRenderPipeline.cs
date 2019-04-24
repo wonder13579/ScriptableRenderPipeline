@@ -106,6 +106,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         RTHandleSystem.RTHandle m_CameraSssDiffuseLightingBuffer;
 
         RTHandleSystem.RTHandle m_ContactShadowBuffer;
+        RTHandleSystem.RTHandle m_ScreenSpaceShadowsBuffer;
         RTHandleSystem.RTHandle m_DistortionBuffer;
 
         RTHandleSystem.RTHandle m_LowResTransparentBuffer;
@@ -442,9 +443,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             m_DistortionBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: Builtin.GetDistortionBufferFormat(), xrInstancing: true, useDynamicScale: true, name: "Distortion");
 
-            m_ContactShadowBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R32_UInt, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "ScreenSpaceShadowsBuffer");
+            m_ContactShadowBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R32_UInt, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "ContactShadowsBuffer");
+            m_ScreenSpaceShadowsBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16_SFloat, enableRandomWrite: false, xrInstancing: true, useDynamicScale: true, name: "ScreenSpaceShadowsBuffer");
 
-            if(m_Asset.currentPlatformRenderPipelineSettings.lowresTransparentSettings.enabled)
+            if (m_Asset.currentPlatformRenderPipelineSettings.lowresTransparentSettings.enabled)
             {
                 // We need R16G16B16A16_SFloat as we need a proper alpha channel for compositing.
                 m_LowResTransparentBuffer = RTHandles.Alloc(Vector2.one * 0.5f, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "Low res transparent");
@@ -483,6 +485,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             RTHandles.Release(m_DistortionBuffer);
             RTHandles.Release(m_ContactShadowBuffer);
+            RTHandles.Release(m_ScreenSpaceShadowsBuffer);
 
             RTHandles.Release(m_LowResTransparentBuffer);
 
@@ -1836,6 +1839,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     SSRTask.End(cmd);
                 }
+
+                m_LightLoop.RenderScreenSpaceShadows(hdCamera, m_ScreenSpaceShadowsBuffer, cmd);
 
                 // Might float this higher if we enable stereo w/ deferred
                 StartStereoRendering(cmd, renderContext, camera);
