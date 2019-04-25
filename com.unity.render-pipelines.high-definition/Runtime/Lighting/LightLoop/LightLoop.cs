@@ -2732,7 +2732,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 return 0;
 
             return 1 << m_ContactShadowIndex++;
-
         }
 
         public void RenderContactShadows(HDCamera hdCamera, RTHandleSystem.RTHandle contactShadowRT, RenderTargetIdentifier depthTexture, int firstMipOffsetY, CommandBuffer cmd)
