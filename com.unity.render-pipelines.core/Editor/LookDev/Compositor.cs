@@ -217,12 +217,12 @@ namespace UnityEditor.Rendering.LookDev
 
             m_RenderTextures.UpdateSize(rect, ViewCompositionIndex.Composite, m_pixelPerfect, null);
 
-            GizmoState gizmo = m_Contexts.layout.gizmoState;
+            ComparisonGizmoState gizmo = m_Contexts.layout.gizmoState;
 
             Vector4 gizmoPosition = new Vector4(gizmo.center.x, gizmo.center.y, 0.0f, 0.0f);
             Vector4 gizmoZoneCenter = new Vector4(gizmo.point2.x, gizmo.point2.y, 0.0f, 0.0f);
-            Vector4 gizmoThickness = new Vector4(GizmoState.thickness, GizmoState.thicknessSelected, 0.0f, 0.0f);
-            Vector4 gizmoCircleRadius = new Vector4(GizmoState.circleRadius, GizmoState.circleRadiusSelected, 0.0f, 0.0f);
+            Vector4 gizmoThickness = new Vector4(ComparisonGizmoState.thickness, ComparisonGizmoState.thicknessSelected, 0.0f, 0.0f);
+            Vector4 gizmoCircleRadius = new Vector4(ComparisonGizmoState.circleRadius, ComparisonGizmoState.circleRadiusSelected, 0.0f, 0.0f);
 
             float exposureValue0 = 0.0f;
             float exposureValue1 = 0.0f;
@@ -287,7 +287,7 @@ namespace UnityEditor.Rendering.LookDev
             s_MaterialCompositer.SetFloat("_GizmoLength", gizmo.length);
             s_MaterialCompositer.SetVector("_GizmoThickness", gizmoThickness);
             s_MaterialCompositer.SetVector("_GizmoCircleRadius", gizmoCircleRadius);
-            s_MaterialCompositer.SetFloat("_BlendFactorCircleRadius", GizmoState.blendFactorCircleRadius);
+            s_MaterialCompositer.SetFloat("_BlendFactorCircleRadius", ComparisonGizmoState.blendFactorCircleRadius);
             s_MaterialCompositer.SetFloat("_GetBlendFactorMaxGizmoDistance", gizmo.blendFactorMaxGizmoDistance);
             s_MaterialCompositer.SetFloat("_GizmoRenderMode", k_GizmoRenderMode);
             s_MaterialCompositer.SetVector("_ScreenRatio", screenRatio);

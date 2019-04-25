@@ -10,7 +10,7 @@ namespace UnityEditor.Rendering.LookDev
         const float k_DragPadding = 0.05f;
         const float k_ReferenceScale = 1080f;
 
-        GizmoState state;
+        ComparisonGizmoState state;
         IDisplayer displayer;
 
         enum Selected
@@ -25,7 +25,7 @@ namespace UnityEditor.Rendering.LookDev
 
         Vector2 savedRelativePositionOnMouseDown;
 
-        public ComparisonGizmo(GizmoState state, IDisplayer displayer)
+        public ComparisonGizmo(ComparisonGizmoState state, IDisplayer displayer)
         {
             this.state = state;
             this.displayer = displayer;
@@ -52,7 +52,7 @@ namespace UnityEditor.Rendering.LookDev
                 }
                 else if (mouseEvent is MouseUpEvent)
                 {
-                    if (selected == Selected.Fader && Mathf.Abs(state.blendFactor) < GizmoState.circleRadiusSelected / (state.length - GizmoState.circleRadius))
+                    if (selected == Selected.Fader && Mathf.Abs(state.blendFactor) < ComparisonGizmoState.circleRadiusSelected / (state.length - ComparisonGizmoState.circleRadius))
                         state.blendFactor = 0f;
                     if (selected != Selected.None)
                         (mouseEvent as MouseUpEvent).StopImmediatePropagation();
@@ -130,20 +130,20 @@ namespace UnityEditor.Rendering.LookDev
             Vector2 orthoPlaneNormal = new Vector2(state.planeOrtho.x, state.planeOrtho.y);
 
             Selected selected = Selected.None;
-            if (absDistanceToPlane < GizmoState.circleRadiusSelected && (distanceFromCenter < (state.length + GizmoState.circleRadiusSelected)))
+            if (absDistanceToPlane < ComparisonGizmoState.circleRadiusSelected && (distanceFromCenter < (state.length + ComparisonGizmoState.circleRadiusSelected)))
             {
-                if (absDistanceToPlane < GizmoState.thicknessSelected)
+                if (absDistanceToPlane < ComparisonGizmoState.thicknessSelected)
                     selected = Selected.PlaneSeparator;
 
                 Vector2 circleCenter = state.center + side * orthoPlaneNormal * state.length;
                 float d = Vector2.Distance(normalizedMousePosition, circleCenter);
-                if (d <= GizmoState.circleRadiusSelected)
+                if (d <= ComparisonGizmoState.circleRadiusSelected)
                     selected = side > 0.0f ? Selected.NodeFirstView : Selected.NodeSecondView;
 
                 float maxBlendCircleDistanceToCenter = state.blendFactorMaxGizmoDistance;
                 float blendCircleDistanceToCenter = state.blendFactor * maxBlendCircleDistanceToCenter;
                 Vector2 blendCircleCenter = state.center - orthoPlaneNormal * blendCircleDistanceToCenter;
-                float blendCircleSelectionRadius = Mathf.Lerp(GizmoState.blendFactorCircleRadius, GizmoState.blendFactorCircleRadiusSelected, Mathf.Clamp((maxBlendCircleDistanceToCenter - Mathf.Abs(blendCircleDistanceToCenter)) / (GizmoState.blendFactorCircleRadiusSelected - GizmoState.blendFactorCircleRadius), 0.0f, 1.0f));
+                float blendCircleSelectionRadius = Mathf.Lerp(ComparisonGizmoState.blendFactorCircleRadius, ComparisonGizmoState.blendFactorCircleRadiusSelected, Mathf.Clamp((maxBlendCircleDistanceToCenter - Mathf.Abs(blendCircleDistanceToCenter)) / (ComparisonGizmoState.blendFactorCircleRadiusSelected - ComparisonGizmoState.blendFactorCircleRadius), 0.0f, 1.0f));
                 if ((normalizedMousePosition - blendCircleCenter).magnitude < blendCircleSelectionRadius)
                     selected = Selected.Fader;
             }

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace UnityEditor.Rendering.LookDev
 {
     [Serializable]
-    public class GizmoState
+    public class ComparisonGizmoState
     {
         public const float thickness = 0.0028f;
         public const float thicknessSelected = 0.015f;
@@ -33,7 +33,7 @@ namespace UnityEditor.Rendering.LookDev
         public float blendFactorMinGizmoDistance
             => length - circleRadius - blendFactorCircleRadiusSelected;
 
-        public GizmoState()
+        public ComparisonGizmoState()
             => Update(center, length, angle);
 
         //TODO: optimize

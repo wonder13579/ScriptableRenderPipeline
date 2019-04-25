@@ -81,7 +81,7 @@ namespace UnityEditor.Rendering.LookDev
         public bool showEnvironmentPanel;
 
         [SerializeField]
-        internal GizmoState gizmoState = new GizmoState();
+        internal ComparisonGizmoState gizmoState = new ComparisonGizmoState();
 
         public bool isSimpleView => viewLayout == Layout.FullFirstView || viewLayout == Layout.FullSecondView;
         public bool isMultiView => viewLayout == Layout.HorizontalSplit || viewLayout == Layout.VerticalSplit;
