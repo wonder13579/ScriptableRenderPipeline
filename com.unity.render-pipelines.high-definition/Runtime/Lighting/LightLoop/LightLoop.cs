@@ -2699,6 +2699,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return m_EnableContactShadow && m_ContactShadowIndex != 0;
         }
 
+        public bool WillRenderScreenSpaceShadows()
+        {
+            // For now this is only for DXR. 
+#if ENABLE_RAYTRACING
+            return true;
+#else
+            return false;
+#endif
+        }
+
+
         public void SetContactShadowsTexture(HDCamera hdCamera, RTHandleSystem.RTHandle contactShadowsRT, CommandBuffer cmd)
         {
             if (!WillRenderContactShadow())
@@ -2766,12 +2777,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public void RenderScreenSpaceShadows(HDCamera hdCamera, RTHandleSystem.RTHandle deferredShadowRT, CommandBuffer cmd)
         {
-            using (new ProfilingSample(cmd, "Screen Space Shadows", CustomSamplerId.TPScreenSpaceShadows.GetSampler()))
+            if(WillRenderScreenSpaceShadows())
             {
-                HDUtils.SetRenderTarget(cmd, deferredShadowRT);
-                HDUtils.DrawFullScreen(cmd, s_ScreenSpaceShadowsMat, deferredShadowRT);
+                using (new ProfilingSample(cmd, "Screen Space Shadows", CustomSamplerId.TPScreenSpaceShadows.GetSampler()))
+                {
+                    HDUtils.SetRenderTarget(cmd, deferredShadowRT);
+                    HDUtils.DrawFullScreen(cmd, s_ScreenSpaceShadowsMat, deferredShadowRT);
+                }
+                cmd.SetGlobalTexture(HDShaderIDs._ScreenSpaceShadowsTexture, deferredShadowRT);
             }
-            cmd.SetGlobalTexture(HDShaderIDs._ScreenSpaceShadowsTexture, deferredShadowRT);
+            else
+            {
+                cmd.SetGlobalTexture(HDShaderIDs._ScreenSpaceShadowsTexture, TextureXR.GetBlackTexture());
+            }
         }
 
         public void RenderDeferredLighting(HDCamera hdCamera, CommandBuffer cmd, DebugDisplaySettings debugDisplaySettings,
