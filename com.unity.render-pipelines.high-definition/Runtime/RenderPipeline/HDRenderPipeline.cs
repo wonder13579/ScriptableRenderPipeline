@@ -1842,7 +1842,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     SSRTask.End(cmd);
                 }
 
-
                 // Might float this higher if we enable stereo w/ deferred
                 StartStereoRendering(cmd, renderContext, camera);
 
