@@ -3,10 +3,12 @@
 // We perform scalarization only for forward rendering as for deferred loads will already be scalar since tiles will match waves and therefore all threads will read from the same tile. 
 // More info on scalarization: https://flashypixels.wordpress.com/2018/11/10/intro-to-gpu-scalarization-part-2-scalarize-all-the-lights/
 #define SCALARIZE_LIGHT_LOOP (defined(SUPPORTS_WAVE_INTRINSICS) && !defined(LIGHTLOOP_DISABLE_TILE_AND_CLUSTER) && SHADERPASS == SHADERPASS_FORWARD)
-// Uncomment this to enable Screen space shadows. IMPORTANT: If this is activated, the light loop function WillRenderScreenSpaceShadows on C# MUST return true.
-// TODO: This will need to be a multi_compile when we'll have them on compute shaders. 
-//#define SCREEN_SPACE_SHADOWS 1
 
+// SCREEN_SPACE_SHADOWS needs to be defined in all cases in which they need to run. IMPORTANT: If this is activated, the light loop function WillRenderScreenSpaceShadows on C# MUST return true.
+#if SHADEROPTIONS_RAYTRACING
+// TODO: This will need to be a multi_compile when we'll have them on compute shaders.
+#define SCREEN_SPACE_SHADOWS 1
+#endif
 
 //-----------------------------------------------------------------------------
 // LightLoop
