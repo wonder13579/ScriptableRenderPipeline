@@ -122,30 +122,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                 context.shadowValue = EvaluateRuntimeSunShadow(context, posInput, light, shadowBiasNormal);
             }
 #else
-            // TODO_FCC: Do we _really_ need this?????
-            if (MaterialSupportsTransmission(bsdfData) && !HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_TRANSMISSION_MODE_THICK_THICKNESS))
-            {
-                DirectionalLightData light = _DirectionalLightDatas[_DirectionalShadowIndex];
-
-                float3 L = -light.forward;
-                float  NdotL = dot(bsdfData.normalWS, L);
-                float3 shadowBiasNormal = GetNormalForShadowBias(bsdfData);
-
-                if (NdotL < 0)
-                {
-                    shadowBiasNormal *= FastSign(dot(shadowBiasNormal, L));
-                    context.shadowValue = EvaluateRuntimeSunShadow(context, posInput, light, shadowBiasNormal);
-                }
-                else
-                {
-                    context.shadowValue = GetScreenSpaceShadow(posInput);
-                }
-            }
-            else
-            {
-                context.shadowValue = GetScreenSpaceShadow(posInput);
-            }
-
+        context.shadowValue = GetScreenSpaceShadow(posInput);
 #endif
         }
     }

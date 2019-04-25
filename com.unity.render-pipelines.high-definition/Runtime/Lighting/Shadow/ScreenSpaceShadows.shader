@@ -49,14 +49,19 @@ Shader "Hidden/HDRP/ScreenSpaceShadows"
             LightLoopContext context;
             context.shadowContext = InitShadowContext();
 
+            // Get directional light data. By definition we only have one directional light casting shadow
+            DirectionalLightData light = _DirectionalLightDatas[_DirectionalShadowIndex];
+            float3 L = -light.forward;
+
             // We also need the normal 
             NormalData normalData;
             DecodeFromNormalBuffer(posInput.positionSS.xy, normalData);
             float3 normalWS = normalData.normalWS;
 
-            // Get directional light data. By definition we only have one directional light casting shadow
-            DirectionalLightData light = _DirectionalLightDatas[_DirectionalShadowIndex];
-            return GetDirectionalShadowAttenuation(context.shadowContext, posInput.positionSS.xy, posInput.positionWS, normalWS, _DirectionalShadowIndex, -light.forward);
+            // If NdotL < 0, we flip the normal in case it is used for the transmission.
+            normalWS *= FastSign(dot(normalWS, L));
+            
+            return GetDirectionalShadowAttenuation(context.shadowContext, posInput.positionSS.xy, posInput.positionWS, normalWS, _DirectionalShadowIndex, L);
         }
     ENDHLSL
 
