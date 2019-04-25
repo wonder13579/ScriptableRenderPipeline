@@ -36,9 +36,13 @@ Shader "Hidden/HDRP/ScreenSpaceShadows"
             return output;
         }
 
-        float4 Frag(Varyings input) : SV_Target
+        float Frag(Varyings input) : SV_Target
         {
             float depth = LoadCameraDepth(input.positionCS.xy);
+
+            if (depth == UNITY_RAW_FAR_CLIP_VALUE)
+                return 1.0f;
+
             PositionInputs posInput = GetPositionInput_Stereo(input.positionCS.xy, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V, unity_StereoEyeIndex);
 
             // Init shadow context

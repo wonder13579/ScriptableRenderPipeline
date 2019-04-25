@@ -362,3 +362,8 @@ float GetContactShadow(LightLoopContext lightLoopContext, int contactShadowMask)
     bool occluded = (lightLoopContext.contactShadow & contactShadowMask) != 0;
     return 1.0 - (occluded * lightLoopContext.contactShadowFade);
 }
+
+float GetScreenSpaceShadow(PositionInputs posInput)
+{
+    return LOAD_TEXTURE2D_X(_ScreenSpaceShadowsTexture, posInput.positionSS).x;
+}

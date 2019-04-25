@@ -2699,16 +2699,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return m_EnableContactShadow && m_ContactShadowIndex != 0;
         }
 
-        public void SetScreenSpaceShadowsTexture(HDCamera hdCamera, RTHandleSystem.RTHandle deferredShadowRT, CommandBuffer cmd)
+        public void SetContactShadowsTexture(HDCamera hdCamera, RTHandleSystem.RTHandle contactShadowsRT, CommandBuffer cmd)
         {
             if (!WillRenderContactShadow())
             {
                 cmd.SetGlobalTexture(HDShaderIDs._ContactShadowTexture, TextureXR.GetBlackTexture());
                 return;
             }
-            cmd.SetGlobalTexture(HDShaderIDs._ContactShadowTexture, deferredShadowRT);
-
-            // TODO_FCC: Set screen space shadow texture. 
+            cmd.SetGlobalTexture(HDShaderIDs._ContactShadowTexture, contactShadowsRT);
         }
 
         // The first rendered 24 lights that have contact shadow enabled have a mask used to select the bit that contains
@@ -2773,6 +2771,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 HDUtils.SetRenderTarget(cmd, deferredShadowRT);
                 HDUtils.DrawFullScreen(cmd, s_ScreenSpaceShadowsMat, deferredShadowRT);
             }
+            cmd.SetGlobalTexture(HDShaderIDs._ScreenSpaceShadowsTexture, deferredShadowRT);
         }
 
         public void RenderDeferredLighting(HDCamera hdCamera, CommandBuffer cmd, DebugDisplaySettings debugDisplaySettings,
