@@ -1987,8 +1987,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     aovRequest.PushCameraTexture(cmd, AOVBuffers.MotionVectors, hdCamera, m_SharedRTManager.GetMotionVectorsBuffer(), aovBuffers);
 
 #if UNITY_EDITOR
-                // We need to make sure the viewport is correctly set for the editor rendering. It might have been changed by debug overlay rendering just before.
-                cmd.SetViewport(hdCamera.finalViewport);
+            // We need to make sure the viewport is correctly set for the editor rendering. It might have been changed by debug overlay rendering just before.
+            cmd.SetViewport(hdCamera.finalViewport);
 
             // Render overlay Gizmos
             if (showGizmos)
