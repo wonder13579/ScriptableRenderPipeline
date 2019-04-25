@@ -94,8 +94,7 @@ namespace UnityEditor.Rendering.LookDev
         Color m_AmbientColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
 
         bool m_RenderDocAcquisitionRequested;
-
-
+        
         public Compositer(
             IDisplayer displayer,
             Context contexts,
@@ -227,7 +226,7 @@ namespace UnityEditor.Rendering.LookDev
 
             float exposureValue0 = 0.0f;
             float exposureValue1 = 0.0f;
-            float dualViewBlendFactor = 0.0f;
+            float dualViewBlendFactor = gizmo.blendFactor;
             float isCurrentlyLeftEditting = 1.0f; //1f true, -1f false
             float dragAndDropContext = 0f; //1f left, -1f right, 0f neither
             float toneMapEnabled = -1f; //1f true, -1f false
