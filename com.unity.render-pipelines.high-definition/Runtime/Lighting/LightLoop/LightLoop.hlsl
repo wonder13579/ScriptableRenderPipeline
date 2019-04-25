@@ -3,6 +3,10 @@
 // We perform scalarization only for forward rendering as for deferred loads will already be scalar since tiles will match waves and therefore all threads will read from the same tile. 
 // More info on scalarization: https://flashypixels.wordpress.com/2018/11/10/intro-to-gpu-scalarization-part-2-scalarize-all-the-lights/
 #define SCALARIZE_LIGHT_LOOP (defined(SUPPORTS_WAVE_INTRINSICS) && !defined(LIGHTLOOP_DISABLE_TILE_AND_CLUSTER) && SHADERPASS == SHADERPASS_FORWARD)
+// Uncomment this to enable Screen space shadows. IMPORTANT: If this is activated, the light loop function RenderScreenSpaceShadows on C# side MUST be called.
+// TODO: This will need to be a multi_compile when we'll have them on compute shaders. 
+//#define SCREEN_SPACE_SHADOWS 1
+
 
 //-----------------------------------------------------------------------------
 // LightLoop
@@ -88,7 +92,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         // Evaluate sun shadows.
         if (_DirectionalShadowIndex >= 0)
         {
-#if (SHADERPASS == SHADERPASS_FORWARD)
+#if (SHADERPASS == SHADERPASS_FORWARD) || !defined(SCREEN_SPACE_SHADOWS)
             DirectionalLightData light = _DirectionalLightDatas[_DirectionalShadowIndex];
 
             // TODO: this will cause us to load from the normal buffer first. Does this cause a performance problem?
