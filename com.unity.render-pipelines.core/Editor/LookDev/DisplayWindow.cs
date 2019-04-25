@@ -197,6 +197,7 @@ namespace UnityEditor.Rendering.LookDev
             rootVisualElement.Add(m_MainContainer);
 
             CreateViews();
+            CreateDropAreas();
             CreateEnvironment();
         }
 
@@ -267,6 +268,19 @@ namespace UnityEditor.Rendering.LookDev
             m_ViewContainer.Add(m_Views[(int)ViewIndex.Second]);
         }
 
+        void CreateDropAreas()
+        {
+            new DropArea(new[] { typeof(GameObject) }, m_Views[(int)ViewIndex.First], (obj, localPos) =>
+            {
+                if (layout == Layout.CustomSplit || layout == Layout.CustomCircular)
+                    OnChangingObjectInViewInternal?.Invoke(obj as GameObject, ViewCompositionIndex.Composite, localPos);
+                else
+                    OnChangingObjectInViewInternal?.Invoke(obj as GameObject, ViewCompositionIndex.First, localPos);
+            });
+            new DropArea(new[] { typeof(GameObject) }, m_Views[(int)ViewIndex.Second], (obj, localPos)
+                => OnChangingObjectInViewInternal?.Invoke(obj as GameObject, ViewCompositionIndex.Second, localPos));
+        }
+
         void CreateEnvironment()
         {
             if (m_MainContainer == null || m_MainContainer.Equals(null))
@@ -314,5 +328,4 @@ namespace UnityEditor.Rendering.LookDev
 
         void IDisplayer.Repaint() => Repaint();
     }
-    
 }

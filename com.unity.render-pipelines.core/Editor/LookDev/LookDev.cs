@@ -72,7 +72,8 @@ namespace UnityEditor.Rendering.LookDev
         public static void Open()
         {
             if (!supported)
-                throw new System.Exception("LookDev is not supported by this Scriptable Render Pipeline: " + (RenderPipelineManager.currentPipeline == null ? "No SRP in use" : RenderPipelineManager.currentPipeline.ToString()));
+                throw new System.Exception("LookDev is not supported by this Scriptable Render Pipeline: "
+                    + (RenderPipelineManager.currentPipeline == null ? "No SRP in use" : RenderPipelineManager.currentPipeline.ToString()));
 
             s_Displayer = EditorWindow.GetWindow<DisplayWindow>();
             ConfigureLookDev();
@@ -119,6 +120,25 @@ namespace UnityEditor.Rendering.LookDev
                 SaveConfig();
 
                 open = false;
+            };
+            s_Displayer.OnChangingObjectInView += (go, index, localPos) =>
+            {
+                switch (index)
+                {
+                    case ViewCompositionIndex.First:
+                    case ViewCompositionIndex.Second:
+                        currentContext.GetViewContent((ViewIndex)index).contentPrefab = go;
+                        s_Stages.UpdateScene((ViewIndex)index);
+                        s_Displayer.Repaint();
+                        break;
+                    case ViewCompositionIndex.Composite:
+                        //[TODO: compute stage along local position and comparizon gizmo state]
+
+                        s_Stages.UpdateScene(ViewIndex.First);
+                        s_Stages.UpdateScene(ViewIndex.Second);
+                        s_Displayer.Repaint();
+                        break;
+                }
             };
         }
 
