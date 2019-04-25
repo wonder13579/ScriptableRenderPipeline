@@ -12,6 +12,8 @@ namespace UnityEditor.Rendering.LookDev
         Rect GetRect(ViewCompositionIndex index);
         void SetTexture(ViewCompositionIndex index, Texture texture);
 
+        void Repaint();
+
         event Action<Layout> OnLayoutChanged;
 
         event Action OnRenderDocAcquisitionTriggered;
@@ -20,6 +22,9 @@ namespace UnityEditor.Rendering.LookDev
 
         event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingObjectInView;
         event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingEnvironmentInView;
+
+
+        event Action OnClosed;
     }
 
     /// <summary>
@@ -170,7 +175,13 @@ namespace UnityEditor.Rendering.LookDev
             remove => OnChangingEnvironmentInViewInternal -= value;
         }
 
-        public event Action OnWindowClosed;
+        event Action OnClosedInternal;
+        event Action IDisplayer.OnClosed
+        {
+            add => OnClosedInternal += value;
+            remove => OnClosedInternal -= value;
+        }
+
 
         void OnEnable()
         {
@@ -189,7 +200,7 @@ namespace UnityEditor.Rendering.LookDev
             CreateEnvironment();
         }
 
-        void OnDisable() => OnWindowClosed?.Invoke();
+        void OnDisable() => OnClosedInternal?.Invoke();
 
         void CreateToolbar()
         {
@@ -300,6 +311,8 @@ namespace UnityEditor.Rendering.LookDev
                     throw new ArgumentException("Unknown ViewCompositionIndex: " + index);
             }
         }
+
+        void IDisplayer.Repaint() => Repaint();
     }
     
 }
