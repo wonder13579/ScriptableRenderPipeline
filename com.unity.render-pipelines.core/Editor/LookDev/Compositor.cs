@@ -319,5 +319,23 @@ namespace UnityEditor.Rendering.LookDev
             GL.End();
             GL.PopMatrix();
         }
+
+        public ViewIndex GetViewFromComposition(Vector2 localCoordinate)
+        {
+            Rect compositionRect = m_Displayer.GetRect(ViewCompositionIndex.Composite);
+            Vector2 normalizedLocalCoordinate = ComparisonGizmo.GetNormalizedCoordinates(localCoordinate, compositionRect);
+            switch (m_Contexts.layout.viewLayout)
+            {
+                case Layout.CustomSplit:
+                    return Vector3.Dot(new Vector3(normalizedLocalCoordinate.x, normalizedLocalCoordinate.y, 1), m_Contexts.layout.gizmoState.plane) >= 0
+                        ? ViewIndex.First
+                        : ViewIndex.Second;
+                case Layout.CustomCircular:
+                    //[TODO]
+                    return default;
+                default:
+                    throw new Exception("GetViewFromComposition call when not inside a Composition");
+            }
+        }
     }
 }

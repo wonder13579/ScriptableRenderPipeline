@@ -152,7 +152,7 @@ namespace UnityEditor.Rendering.LookDev
         }
 
         //normalize in [-1,1]^2 for a 1080^2. Can be above 1 for higher than 1080.
-        private Vector2 GetNormalizedCoordinates(Vector2 localMousePosition, Rect rect)
+        internal static Vector2 GetNormalizedCoordinates(Vector2 localMousePosition, Rect rect)
             => new Vector2(
                 (2f * localMousePosition.x - rect.width) / k_ReferenceScale,
                 (-2f * localMousePosition.y + rect.height) / k_ReferenceScale);

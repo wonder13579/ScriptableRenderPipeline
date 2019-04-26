@@ -128,15 +128,12 @@ namespace UnityEditor.Rendering.LookDev
                     case ViewCompositionIndex.First:
                     case ViewCompositionIndex.Second:
                         currentContext.GetViewContent((ViewIndex)index).contentPrefab = go;
-                        s_Stages.UpdateScene((ViewIndex)index);
-                        s_Displayer.Repaint();
+                        PushSceneChangesToRenderer((ViewIndex)index);
                         break;
                     case ViewCompositionIndex.Composite:
-                        //[TODO: compute stage along local position and comparizon gizmo state]
-
-                        s_Stages.UpdateScene(ViewIndex.First);
-                        s_Stages.UpdateScene(ViewIndex.Second);
-                        s_Displayer.Repaint();
+                        ViewIndex viewIndex = s_Compositor.GetViewFromComposition(localPos);
+                        currentContext.GetViewContent(viewIndex).contentPrefab = go;
+                        PushSceneChangesToRenderer(viewIndex);
                         break;
                 }
             };
