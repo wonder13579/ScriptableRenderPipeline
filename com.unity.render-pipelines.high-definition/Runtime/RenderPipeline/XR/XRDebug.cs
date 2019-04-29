@@ -58,12 +58,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
     public partial class XRSystem
     {
-        private GameObject debugVolume;
+        private readonly string debugVolumeName = "XRDebugVolume";
 
-        // Setup a vignette effect to make a thin border around each view
+        private GameObject m_debugVolume = null;
+        private GameObject debugVolume { get => m_debugVolume ?? GameObject.Find(debugVolumeName); set => m_debugVolume = value; }
+
+        // Setup a vignette effect to make a thin red border around each view
         void CreateDebugVolume()
         {
-            debugVolume = new GameObject("XRDebugVolume");
+            debugVolume =  new GameObject(debugVolumeName);
             debugVolume.hideFlags = HideFlags.HideInHierarchy;
 
             var volume = debugVolume.AddComponent<Volume>();
@@ -79,18 +82,25 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             vignette.color.Override(Color.red);
         }
 
-        bool ProcessDebugMode(bool xrEnabled, Camera camera, ref List<MultipassCamera> multipassCameras)
+        void DestroyDebugVolume()
         {
-            if (camera.cameraType != CameraType.Game || xrEnabled || XRDebugMenu.debugMode == XRDebugMode.None)
+            if (debugVolume != null)
             {
-                if (debugVolume != null)
-                {
-                    Object.DestroyImmediate(debugVolume);
-                    debugVolume = null;
-                }
+                Object.DestroyImmediate(debugVolume);
+                debugVolume = null;
+            }
+        }
 
+        bool ProcessDebugMode(bool xrEnabled, Camera camera)
+        {
+            if (XRDebugMenu.debugMode == XRDebugMode.None)
+            {
+                DestroyDebugVolume();
                 return false;
             }
+
+            if (camera.cameraType != CameraType.Game || xrEnabled)
+                return false;
 
             if (debugVolume == null)
                 CreateDebugVolume();
@@ -112,7 +122,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 for (int tileX = 0; tileX < tileCountX; ++tileX)
                 {
-                    var xrPass = XRPass.Create(passList.Count, camera.targetTexture);
+                    var xrPass = XRPass.Create(framePasses.Count, camera.targetTexture);
 
                     float spliRatioX1 = Mathf.Pow((tileX + 0.0f) / tileCountX, splitRatio);
                     float spliRatioX2 = Mathf.Pow((tileX + 1.0f) / tileCountX, splitRatio);
@@ -134,7 +144,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     Matrix4x4 proj = camera.orthographic ? Matrix4x4.Ortho(planes.left, planes.right, planes.bottom, planes.top, planes.zNear, planes.zFar) : Matrix4x4.Frustum(planes);
 
                     xrPass.AddView(proj, camera.worldToCameraMatrix, viewport);
-                    AddPassToFrame(xrPass, camera, ref multipassCameras);
+                    AddPassToFrame(camera, xrPass);
                 }
             }
 

@@ -40,21 +40,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline.Tests
 
         public void SimulateOneFrame()
         {
-            using (ListPool<MultipassCamera>.Get(out List<MultipassCamera> multipassCameras))
+            foreach (var camera in cameras)
             {
-                foreach (var camera in cameras)
+                for (int passIndex = 0; passIndex < k_PassCount; ++passIndex)
                 {
-                    for (int passIndex = 0; passIndex < k_PassCount; ++passIndex)
+                    var xrPass = XRPass.Create(passIndex);
+
+                    for (int viewIndex = 0; viewIndex < k_ViewCount; ++viewIndex)
                     {
-                        var xrPass = XRPass.Create(passIndex);
-
-                        for (int viewIndex = 0; viewIndex < k_ViewCount; ++viewIndex)
-                        {
-                            xrPass.AddViewInternal(new XRView());
-                        }
-
-                        xrSystem.AddPassToFrame(xrPass, camera, ref multipassCameras);
+                        xrPass.AddViewInternal(new XRView());
                     }
+
+                    xrSystem.AddPassToFrame(camera, xrPass);
                 }
             }
 

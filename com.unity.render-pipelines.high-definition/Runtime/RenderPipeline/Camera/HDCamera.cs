@@ -68,7 +68,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Vector4  textureWidthScaling; // (2.0, 0.5) for SinglePassDoubleWide (stereo) and (1.0, 1.0) otherwise
 
         // XR multipass and instanced views are supported (see XRSystem)
-        public readonly XRPass xr;
+        XRPass m_XRPass;
+        public XRPass xr { get { return m_XRPass; } }
         ViewConstants[] xrViewConstants;
         ComputeBuffer   xrViewConstantsGpu;
 
@@ -220,8 +221,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             ? m_AdditionalCameraData.probeLayerMask
             : (LayerMask)~0;
 
-        static Dictionary<MultipassCamera, HDCamera> s_Cameras = new Dictionary<MultipassCamera, HDCamera>();
-        static List<MultipassCamera> s_Cleanup = new List<MultipassCamera>(); // Recycled to reduce GC pressure
+        static Dictionary<(Camera, int), HDCamera> s_Cameras = new Dictionary<(Camera, int), HDCamera>();
+        static List<(Camera, int)> s_Cleanup = new List<(Camera, int)>(); // Recycled to reduce GC pressure
 
         HDAdditionalCameraData m_AdditionalCameraData = null; // Init in Update
 
@@ -230,7 +231,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         int m_NumColorPyramidBuffersAllocated = 0;
         int m_NumVolumetricBuffersAllocated   = 0;
 
-        public HDCamera(Camera cam, ICameraPass pass)
+        public HDCamera(Camera cam)
         {
             camera = cam;
 
@@ -239,9 +240,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             frustum.corners = new Vector3[8];
 
             frustumPlaneEquations = new Vector4[6];
-
-            // Always use a valid XR pass to simplify logic
-            xr = (pass as XRPass) ?? XRSystem.emptyPass;
 
             Reset();
         }
@@ -255,12 +253,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // That way you will never update an HDCamera and forget to update the dependent system.
         // NOTE: This function must be called only once per rendering (not frame, as a single camera can be rendered multiple times with different parameters during the same frame)
         // Otherwise, previous frame view constants will be wrong.
-        public void Update(FrameSettings currentFrameSettings, VolumetricLightingSystem vlSys, MSAASamples msaaSamples, int frameIndex)
+        public void Update(FrameSettings currentFrameSettings, VolumetricLightingSystem vlSys, MSAASamples msaaSamples, int frameIndex, XRPass xrPass)
         {
             // store a shortcut on HDAdditionalCameraData (done here and not in the constructor as
             // we don't create HDCamera at every frame and user can change the HDAdditionalData later (Like when they create a new scene).
             m_AdditionalCameraData = camera.GetComponent<HDAdditionalCameraData>();
 
+            m_XRPass = xrPass;
             m_frameSettings = currentFrameSettings;
 
             UpdateAntialiasing();
@@ -759,19 +758,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        // Will return NULL if the camera does not exist.
-        public static HDCamera Get(MultipassCamera multipassCamera)
-        {
-            HDCamera hdCamera;
-
-            if (!s_Cameras.TryGetValue(multipassCamera, out hdCamera))
-            {
-                hdCamera = null;
-            }
-
-            return hdCamera;
-        }
-
         // BufferedRTHandleSystem API expects an allocator function. We define it here.
         static RTHandleSystem.RTHandle HistoryBufferAllocatorFunction(string viewName, int frameIndex, RTHandleSystem rtHandleSystem)
         {
@@ -785,10 +771,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Pass all the systems that may want to initialize per-camera data here.
         // That way you will never create an HDCamera and forget to initialize the data.
-        public static HDCamera Create(MultipassCamera multipassCamera)
+        public static HDCamera GetOrCreate(Camera camera, XRPass xrPass)
         {
-            HDCamera hdCamera = new HDCamera(multipassCamera.camera, multipassCamera.cameraPass);
-            s_Cameras.Add(multipassCamera, hdCamera);
+            HDCamera hdCamera;
+
+            if (!s_Cameras.TryGetValue((camera, xrPass.multipassId), out hdCamera))
+            {
+                hdCamera = new HDCamera(camera);
+                s_Cameras.Add((camera, xrPass.multipassId), hdCamera);
+            }
 
             return hdCamera;
         }

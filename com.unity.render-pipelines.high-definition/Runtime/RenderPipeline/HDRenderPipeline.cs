@@ -1032,16 +1032,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             using (DictionaryPool<HDProbe, List<int>>.Get(out Dictionary<HDProbe, List<int>> renderRequestIndicesWhereTheProbeIsVisible))
             using (ListPool<CameraSettings>.Get(out List<CameraSettings> cameraSettings))
             using (ListPool<CameraPositionSettings>.Get(out List<CameraPositionSettings> cameraPositionSettings))
-            using (ListPool<MultipassCamera>.Get(out List<MultipassCamera> multipassCameras))
-
             {
                 // With XR multi-pass enabled, each camera can be rendered multiple times with different parameters
-                m_XRSystem.SetupFrame(cameras, ref multipassCameras);
+                var multipassCameras = m_XRSystem.SetupFrame(cameras);
 
                 // Culling loop
-                foreach (var multipassCamera in multipassCameras)
+                foreach ((Camera camera, XRPass xrPass) in multipassCameras)
                 {
-                    var camera = multipassCamera.camera;
                     if (camera == null)
                         continue;
 
@@ -1060,17 +1057,34 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     cullingResults.Reset();
 
                     // Try to compute the parameters of the request or skip the request
-                    var skipRequest = !(TryCalculateFrameParameters(
-                            multipassCamera,
+                    var skipRequest = !TryCalculateFrameParameters(
+                            camera,
+                            xrPass,
                             out var additionalCameraData,
                             out var hdCamera,
-                            out var cullingParameters
-                        )
-                        // Note: In case of a custom render, we have false here and 'TryCull' is not executed
-                        && TryCull(
-                            camera, hdCamera, renderContext, cullingParameters,
-                            ref cullingResults
-                        ));
+                            out var cullingParameters);
+
+                    // Note: In case of a custom render, we have false here and 'TryCull' is not executed
+                    if (!skipRequest)
+                    {
+                        var needCulling = true;
+
+                        // In XR multipass, culling results can be shared if the pass has the same culling id
+                        if (xrPass.multipassId > 0)
+                        {
+                            foreach (var req in renderRequests)
+                            {
+                                if (req.hdCamera.xr.cullingPassId == xrPass.cullingPassId)
+                                {
+                                    cullingResults = req.cullingResults;
+                                    needCulling = false;
+                                }
+                            }
+                        }
+
+                        if (needCulling)
+                            skipRequest = !TryCull(camera, hdCamera, renderContext, cullingParameters, ref cullingResults);
+                    }
 
                     if (additionalCameraData != null && additionalCameraData.hasCustomRender)
                     {
@@ -1251,7 +1265,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         _cullingResults.Reset();
 
                         if (!(TryCalculateFrameParameters(
-                                new MultipassCamera(camera),
+                                camera,
+                                m_XRSystem.emptyPass,
                                 out _,
                                 out var hdCamera,
                                 out var cullingParameters
@@ -2110,7 +2125,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         bool TryCalculateFrameParameters(
-            MultipassCamera multipassCamera,
+            Camera camera,
+            XRPass xrPass,
             out HDAdditionalCameraData additionalCameraData,
             out HDCamera hdCamera,
             out ScriptableCullingParameters cullingParams
@@ -2118,7 +2134,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             // First, get aggregate of frame settings base on global settings, camera frame settings and debug settings
             // Note: the SceneView camera will never have additionalCameraData
-            Camera camera = multipassCamera.camera;
             additionalCameraData = camera.GetComponent<HDAdditionalCameraData>();
             hdCamera = default;
             cullingParams = default;
@@ -2133,8 +2148,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // Specific pass to simply display the content of the camera buffer if users have fill it themselves (like video player)
             if (additionalCameraData && additionalCameraData.fullscreenPassthrough)
                 return false;
-
-            hdCamera = null;
 
             // Retrieve debug display settings to init FrameSettings, unless we are a reflection and in this case we don't have debug settings apply.
             DebugDisplaySettings debugDisplaySettings = (camera.cameraType == CameraType.Reflection || camera.cameraType == CameraType.Preview) ? s_NeutralDebugDisplaySettings : m_DebugDisplaySettings;
@@ -2166,10 +2179,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 currentFrameSettings.SetEnabled(FrameSettingsField.ObjectMotionVectors, false);
             }
 
-            hdCamera = HDCamera.Get(multipassCamera) ?? HDCamera.Create(multipassCamera);
+            hdCamera = HDCamera.GetOrCreate(camera, xrPass);
 
             // From this point, we should only use frame settings from the camera
-            hdCamera.Update(currentFrameSettings, m_VolumetricLightingSystem, m_MSAASamples, m_FrameCount);
+            hdCamera.Update(currentFrameSettings, m_VolumetricLightingSystem, m_MSAASamples, m_FrameCount, xrPass);
 
             // Custom Render requires a proper HDCamera, so we return after the HDCamera was setup
             if (additionalCameraData != null && additionalCameraData.hasCustomRender)

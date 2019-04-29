@@ -5,7 +5,7 @@
 // To avoid allocating every frame, XRView is a struct and XRPass is pooled.
 
 #if UNITY_2019_3_OR_NEWER && ENABLE_VR
-//#define USE_XR_SDK
+#define USE_XR_SDK
 #endif
 
 using System;
@@ -55,14 +55,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #endif
     }
 
-    public class XRPass : ICameraPass
+    public class XRPass
     {
         readonly List<XRView> views = new List<XRView>(2);
 
         internal bool enabled      { get => views.Count > 0; }
         internal bool xrSdkEnabled { get; private set; }
 
-        internal int passId         { get; private set; }
+        internal int multipassId    { get; private set; }
         internal int cullingPassId  { get; private set; }
 
         // Ability to specify where to render the pass
@@ -91,12 +91,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         internal int  legacyMultipassEye      { get => (int)views[0].legacyStereoEye; }
         internal bool legacyMultipassEnabled  { get => enabled && !instancingEnabled && legacyMultipassEye >= 0; }
 
-        internal static XRPass Create(int passId, RenderTexture rt = null)
+        internal static XRPass Create(int multipassId, RenderTexture rt = null)
         {
             XRPass passInfo = GenericPool<XRPass>.Get();
 
-            passInfo.passId = passId;
-            passInfo.cullingPassId = -1;
+            passInfo.multipassId = multipassId;
+            passInfo.cullingPassId = multipassId;
             passInfo.views.Clear();
 
             if (rt != null)
@@ -135,7 +135,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             XRPass passInfo = GenericPool<XRPass>.Get();
 
-            passInfo.passId = xrRenderPass.renderPassIndex;
+            passInfo.multipassId = xrRenderPass.renderPassIndex;
             passInfo.cullingPassId = xrRenderPass.cullingPassIndex;
             passInfo.views.Clear();
             passInfo.renderTarget = xrRenderPass.renderTarget;
@@ -241,12 +241,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         HDUtils.BlitQuad(cmd, tempRenderTexture, new Vector4(1, 1, 0, 0), new Vector4(1, 1, 0, 0), 0, false);
 
                         // Mirror view (only works with stereo for now)
-                        if (passId < 2)
+                        if (multipassId < 2)
                         {
                             cmd.SetRenderTarget(new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
                             cmd.SetViewport(hdCamera.camera.pixelRect);
 
-                            Vector4 scaleBiasRT = new Vector4(0.5f, 1, passId * 0.5f, 0);
+                            Vector4 scaleBiasRT = new Vector4(0.5f, 1, multipassId * 0.5f, 0);
                             HDUtils.BlitQuad(cmd, tempRenderTexture, new Vector4(1, 1, 0, 0), scaleBiasRT, 0, true);
                         }
                         else

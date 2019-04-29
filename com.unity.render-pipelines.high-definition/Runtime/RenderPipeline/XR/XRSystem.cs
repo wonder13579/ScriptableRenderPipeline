@@ -3,7 +3,7 @@
 // - or the 'legacy' C++ stereo rendering path and XRSettings (will be removed in 2020.1)
 
 #if UNITY_2019_3_OR_NEWER && ENABLE_VR
-//#define USE_XR_SDK
+#define USE_XR_SDK
 #endif
 
 using System;
@@ -18,25 +18,36 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     public partial class XRSystem
     {
         // Valid empty pass when a camera is not using XR
-        public static readonly XRPass emptyPass = new XRPass();
+        public readonly XRPass emptyPass = new XRPass();
 
         // Store active passes and avoid allocating memory every frames
-        List<XRPass> passList = new List<XRPass>();
+        List<(Camera, XRPass)> framePasses = new List<(Camera, XRPass)>();
 
 #if USE_XR_SDK
         List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
         XRDisplaySubsystem display = null;
 #endif
 
-        internal void SetupFrame(Camera[] cameras, ref List<MultipassCamera> multipassCameras)
+        internal List<(Camera, XRPass)> SetupFrame(Camera[] cameras)
         {
             bool xrSdkActive = RefreshXrSdk();
 
-            Debug.Assert(passList.Count == 0, "XRSystem.ReleaseFrame() was not called!");
-            Debug.Assert(!(xrSdkActive && XRGraphics.enabled), "The legacy C++ stereo rendering path must be disabled with XR SDK! Go to Project Settings --> Player --> XR Settings");
+            // Validate state
+            {
+                Debug.Assert(framePasses.Count == 0, "XRSystem.ReleaseFrame() was not called!");
+
+                if (XRGraphics.enabled)
+                {
+                    Debug.Assert(XRGraphics.stereoRenderingMode != XRGraphics.StereoRenderingMode.SinglePass, "single-pass (double-wide) is not compatible with HDRP.");
+                    Debug.Assert(!xrSdkActive, "The legacy C++ stereo rendering path must be disabled with XR SDK! Go to Project Settings --> Player --> XR Settings");
+                }
+            }
             
             foreach (var camera in cameras)
             {
+                if (camera == null)
+                    continue;
+
                 // Read XR SDK or legacy settings
                 bool xrEnabled = xrSdkActive || (camera.stereoEnabled && XRGraphics.enabled);
 
@@ -45,25 +56,27 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 bool xrSupported = camera.cameraType == CameraType.Game && camera.targetTexture == null;
 
                 // Debug modes can override the entire layout
-                if (ProcessDebugMode(xrEnabled, camera, ref multipassCameras))
+                if (ProcessDebugMode(xrEnabled, camera))
                     continue;
 
                 if (xrEnabled && xrSupported)
                 {
                     if (xrSdkActive)
                     {
-                        CreateLayoutFromXrSdk(camera, ref multipassCameras);
+                        CreateLayoutFromXrSdk(camera);
                     }
                     else
                     {
-                        CreateLayoutLegacyStereo(camera, ref multipassCameras);
+                        CreateLayoutLegacyStereo(camera);
                     }
                 }
                 else
                 {
-                    multipassCameras.Add(new MultipassCamera(camera));
+                    AddPassToFrame(camera, emptyPass);
                 }
             }
+
+            return framePasses;
         }
 
         bool RefreshXrSdk()
@@ -87,7 +100,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return false;
         }
 
-        void CreateLayoutLegacyStereo(Camera camera, ref List<MultipassCamera> multipassCameras)
+        void CreateLayoutLegacyStereo(Camera camera)
         {
             if (XRGraphics.stereoRenderingMode == XRGraphics.StereoRenderingMode.MultiPass)
             {
@@ -96,23 +109,23 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     var xrPass = XRPass.Create(passIndex);
                     xrPass.AddView(camera, (Camera.StereoscopicEye)passIndex);
 
-                    AddPassToFrame(xrPass, camera, ref multipassCameras);
+                    AddPassToFrame(camera, xrPass);
                 }
             }
             else
             {
-                var xrPass = XRPass.Create(passId: 0);
+                var xrPass = XRPass.Create(multipassId: 0);
 
                 for (int viewIndex = 0; viewIndex < 2; ++viewIndex)
                 {
                     xrPass.AddView(camera, (Camera.StereoscopicEye)viewIndex);
                 }
 
-                AddPassToFrame(xrPass, camera, ref multipassCameras);
+               AddPassToFrame(camera, xrPass);
             }
         }
 
-        void CreateLayoutFromXrSdk(Camera camera, ref List<MultipassCamera> multipassCameras)
+        void CreateLayoutFromXrSdk(Camera camera)
         {
 #if USE_XR_SDK
             for (int renderPassIndex = 0; renderPassIndex < display.GetRenderPassCount(); ++renderPassIndex)
@@ -132,7 +145,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         var xrPass = XRPass.Create(renderPass);
                         xrPass.AddView(renderParam);
 
-                        AddPassToFrame(xrPass, camera, ref multipassCameras);
+                        AddPassToFrame(camera, xrPass);
                     }
                 }
             }
@@ -158,7 +171,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         internal void ClearAll()
         {
-            passList = null;
+            DestroyDebugVolume();
+
+            framePasses = null;
 
 #if USE_XR_SDK
             displayList = null;
@@ -168,16 +183,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         internal void ReleaseFrame()
         {
-            foreach (var xrPass in passList)
-                XRPass.Release(xrPass);
+            foreach ((Camera _, XRPass xrPass) in framePasses)
+            {
+                if (xrPass != emptyPass)
+                    XRPass.Release(xrPass);
+            }
 
-            passList.Clear();
+            framePasses.Clear();
         }
 
-        internal void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
+        internal void AddPassToFrame(Camera camera, XRPass xrPass)
         {
-            passList.Add(pass);
-            multipassCameras.Add(new MultipassCamera(camera, pass));
+            framePasses.Add((camera, xrPass));
         }
 
 #if USE_XR_SDK
