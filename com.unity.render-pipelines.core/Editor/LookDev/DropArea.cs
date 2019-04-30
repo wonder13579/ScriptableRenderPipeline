@@ -29,27 +29,47 @@ namespace UnityEditor.Rendering.LookDev
                     continue;
 
                 droppable = true;
-                break;
+                evt.StopPropagation();
+                return;
             }
-            evt.StopPropagation();
         }
 
         void DragLeave(DragLeaveEvent evt)
         {
-            DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
-            evt.StopPropagation();
+            foreach (UnityEngine.Object obj in DragAndDrop.objectReferences)
+            {
+                if (!IsInAcceptedTypes(obj.GetType()))
+                    continue;
+                
+                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                evt.StopPropagation();
+                return;
+            }
         }
 
         void DragExit(DragExitedEvent evt)
         {
-            DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
-            evt.StopPropagation();
+            foreach (UnityEngine.Object obj in DragAndDrop.objectReferences)
+            {
+                if (!IsInAcceptedTypes(obj.GetType()))
+                    continue;
+
+                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
+                evt.StopPropagation();
+                return;
+            }
         }
         
         void DragUpdate(DragUpdatedEvent evt)
         {
-            DragAndDrop.visualMode = droppable ? DragAndDropVisualMode.Link : DragAndDropVisualMode.Rejected;
-            evt.StopPropagation();
+            foreach (UnityEngine.Object obj in DragAndDrop.objectReferences)
+            {
+                if (!IsInAcceptedTypes(obj.GetType()))
+                    continue;
+
+                DragAndDrop.visualMode = droppable ? DragAndDropVisualMode.Link : DragAndDropVisualMode.Rejected;
+                evt.StopPropagation();
+            }
         }
 
         void Drop(DragPerformEvent evt, Action<UnityEngine.Object, Vector2> OnDrop)
