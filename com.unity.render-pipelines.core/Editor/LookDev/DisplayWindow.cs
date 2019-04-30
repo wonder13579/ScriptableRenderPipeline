@@ -14,7 +14,7 @@ namespace UnityEditor.Rendering.LookDev
 
         void Repaint();
 
-        event Action<Layout> OnLayoutChanged;
+        event Action<Layout, bool> OnLayoutChanged;
 
         event Action OnRenderDocAcquisitionTriggered;
         
@@ -70,48 +70,8 @@ namespace UnityEditor.Rendering.LookDev
             {
                 if (LookDev.currentContext.layout.viewLayout != value)
                 {
-                    switch (value)
-                    {
-                        case Layout.HorizontalSplit:
-                        case Layout.VerticalSplit:
-                            if (!m_ViewContainer.ClassListContains(k_FirstViewClass))
-                                m_ViewContainer.AddToClassList(k_FirstViewClass);
-                            if (!m_ViewContainer.ClassListContains(k_SecondViewsClass))
-                                m_ViewContainer.AddToClassList(k_SecondViewsClass);
-                            if (value == Layout.VerticalSplit)
-                            {
-                                m_ViewContainer.AddToClassList(k_VerticalViewsClass);
-                                if (!m_ViewContainer.ClassListContains(k_VerticalViewsClass))
-                                    m_ViewContainer.AddToClassList(k_FirstViewClass);
-                            }
-                            break;
-                        case Layout.FullFirstView:
-                        case Layout.CustomSplit:       //display composition on first rect
-                        case Layout.CustomCircular:    //display composition on first rect
-                            if (!m_ViewContainer.ClassListContains(k_FirstViewClass))
-                                m_ViewContainer.AddToClassList(k_FirstViewClass);
-                            if (m_ViewContainer.ClassListContains(k_SecondViewsClass))
-                                m_ViewContainer.RemoveFromClassList(k_SecondViewsClass);
-                            break;
-                        case Layout.FullSecondView:
-                            if (m_ViewContainer.ClassListContains(k_FirstViewClass))
-                                m_ViewContainer.RemoveFromClassList(k_FirstViewClass);
-                            if (!m_ViewContainer.ClassListContains(k_SecondViewsClass))
-                                m_ViewContainer.AddToClassList(k_SecondViewsClass);
-                            break;
-                        default:
-                            throw new ArgumentException("Unknown Layout");
-                    }
-
-                    //Add flex direction here
-                    if (value == Layout.VerticalSplit)
-                        m_ViewContainer.AddToClassList(k_VerticalViewsClass);
-                    else if (m_ViewContainer.ClassListContains(k_VerticalViewsClass))
-                        m_ViewContainer.RemoveFromClassList(k_VerticalViewsClass);
-
-                    LookDev.currentContext.layout.viewLayout = value;
-
-                    OnLayoutChangedInternal?.Invoke(value);
+                    OnLayoutChangedInternal?.Invoke(value, showEnvironmentPanel);
+                    ApplyLayout(value);
                 }
             }
         }
@@ -123,24 +83,14 @@ namespace UnityEditor.Rendering.LookDev
             {
                 if (LookDev.currentContext.layout.showEnvironmentPanel != value)
                 {
-                    if (value)
-                    {
-                        if (!m_MainContainer.ClassListContains(k_ShowEnvironmentPanelClass))
-                            m_MainContainer.AddToClassList(k_ShowEnvironmentPanelClass);
-                    }
-                    else
-                    {
-                        if (m_MainContainer.ClassListContains(k_ShowEnvironmentPanelClass))
-                            m_MainContainer.RemoveFromClassList(k_ShowEnvironmentPanelClass);
-                    }
-
-                    LookDev.currentContext.layout.showEnvironmentPanel = value;
+                    OnLayoutChangedInternal?.Invoke(layout, value);
+                    ApplyEnvironmentToggling(value);
                 }
             }
         }
         
-        event Action<Layout> OnLayoutChangedInternal;
-        event Action<Layout> IViewDisplayer.OnLayoutChanged
+        event Action<Layout, bool> OnLayoutChangedInternal;
+        event Action<Layout, bool> IViewDisplayer.OnLayoutChanged
         {
             add => OnLayoutChangedInternal += value;
             remove => OnLayoutChangedInternal -= value;
@@ -184,6 +134,12 @@ namespace UnityEditor.Rendering.LookDev
 
         void OnEnable()
         {
+            //Call the open function to configure LookDev
+            // in case the window where open when last editor session finished.
+            // (Else it will open at start and has nothing to display).
+            if (!LookDev.open)
+                LookDev.Open();
+
             titleContent = Style.WindowTitleAndIcon;
 
             rootVisualElement.styleSheets.Add(
@@ -198,6 +154,9 @@ namespace UnityEditor.Rendering.LookDev
             CreateViews();
             CreateEnvironment();
             CreateDropAreas();
+
+            ApplyLayout(layout);
+            ApplyEnvironmentToggling(showEnvironmentPanel);
         }
 
         void OnDisable() => OnClosedInternal?.Invoke();
@@ -338,5 +297,61 @@ namespace UnityEditor.Rendering.LookDev
         }
 
         void IViewDisplayer.Repaint() => Repaint();
+
+        void ApplyLayout(Layout value)
+        {
+            switch (value)
+            {
+                case Layout.HorizontalSplit:
+                case Layout.VerticalSplit:
+                    if (!m_ViewContainer.ClassListContains(k_FirstViewClass))
+                        m_ViewContainer.AddToClassList(k_FirstViewClass);
+                    if (!m_ViewContainer.ClassListContains(k_SecondViewsClass))
+                        m_ViewContainer.AddToClassList(k_SecondViewsClass);
+                    if (value == Layout.VerticalSplit)
+                    {
+                        m_ViewContainer.AddToClassList(k_VerticalViewsClass);
+                        if (!m_ViewContainer.ClassListContains(k_VerticalViewsClass))
+                            m_ViewContainer.AddToClassList(k_FirstViewClass);
+                    }
+                    break;
+                case Layout.FullFirstView:
+                case Layout.CustomSplit:       //display composition on first rect
+                case Layout.CustomCircular:    //display composition on first rect
+                    if (!m_ViewContainer.ClassListContains(k_FirstViewClass))
+                        m_ViewContainer.AddToClassList(k_FirstViewClass);
+                    if (m_ViewContainer.ClassListContains(k_SecondViewsClass))
+                        m_ViewContainer.RemoveFromClassList(k_SecondViewsClass);
+                    break;
+                case Layout.FullSecondView:
+                    if (m_ViewContainer.ClassListContains(k_FirstViewClass))
+                        m_ViewContainer.RemoveFromClassList(k_FirstViewClass);
+                    if (!m_ViewContainer.ClassListContains(k_SecondViewsClass))
+                        m_ViewContainer.AddToClassList(k_SecondViewsClass);
+                    break;
+                default:
+                    throw new ArgumentException("Unknown Layout");
+            }
+
+            //Add flex direction here
+            if (value == Layout.VerticalSplit)
+                m_ViewContainer.AddToClassList(k_VerticalViewsClass);
+            else if (m_ViewContainer.ClassListContains(k_VerticalViewsClass))
+                m_ViewContainer.RemoveFromClassList(k_VerticalViewsClass);
+        }
+
+        void ApplyEnvironmentToggling(bool open)
+        {
+            if (open)
+            {
+                if (!m_MainContainer.ClassListContains(k_ShowEnvironmentPanelClass))
+                    m_MainContainer.AddToClassList(k_ShowEnvironmentPanelClass);
+            }
+            else
+            {
+                if (m_MainContainer.ClassListContains(k_ShowEnvironmentPanelClass))
+                    m_MainContainer.RemoveFromClassList(k_ShowEnvironmentPanelClass);
+            }
+        }
     }
 }

@@ -30,7 +30,7 @@ namespace UnityEditor.Rendering.LookDev
     public class Context : ScriptableObject
     {
         [field: SerializeField]
-        public LayoutContext layout { get; } = new LayoutContext();
+        public LayoutContext layout { get; private set; } = new LayoutContext();
 
         [SerializeField]
         ViewContext[] m_Views = new ViewContext[2]
@@ -112,7 +112,7 @@ namespace UnityEditor.Rendering.LookDev
         /// <summary>
         /// The currently displayed instance of <see cref="viewedObjectReference"/>.
         /// It will be instantiated when pushing changes to renderer.
-        /// See <see cref="LookDev.PushSceneChangesToRenderer(ViewIndex)"/>
+        /// See <see cref="LookDev.SaveContextChangeAndApply(ViewIndex)"/>
         /// </summary>
         public GameObject viewedInstanceInPreview { get; internal set; }
 
@@ -132,8 +132,7 @@ namespace UnityEditor.Rendering.LookDev
             if (!(environmentOrCubemapAsset is Environment)
                 && !(environmentOrCubemapAsset is Cubemap))
                 throw new System.ArgumentException("Only Environment or Cubemap accepted for environmentOrCubemapAsset parameter");
-
-
+            
             environmentGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(environmentOrCubemapAsset));
             if (environmentOrCubemapAsset is Environment)
                 environment = environmentOrCubemapAsset as Environment;
@@ -174,7 +173,7 @@ namespace UnityEditor.Rendering.LookDev
             if (viewedObject == null || viewedObject.Equals(null))
                 return;
             
-            bool fromHierarchy = viewedObject.scene != null;
+            bool fromHierarchy = viewedObject.scene.IsValid();
             if (fromHierarchy)
                 viewedObjecHierarchytInstanceID = viewedObject.GetInstanceID();
             else
@@ -200,11 +199,16 @@ namespace UnityEditor.Rendering.LookDev
             }
         }
 
-        internal void ReloadDataOnScriptsReload()
+        internal void LoadAll(bool reloadWithTemporaryID)
         {
+            if (!reloadWithTemporaryID)
+                CleanTemporaryObjectIndexes();
             LoadEnvironmentFromGUID();
             LoadViewedObject();
         }
+
+        internal void CleanTemporaryObjectIndexes()
+            => viewedObjecHierarchytInstanceID = 0;
 
         //[TODO: add object position]
         //[TODO: add camera frustum]
