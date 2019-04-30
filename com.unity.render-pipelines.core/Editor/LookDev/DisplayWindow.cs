@@ -18,12 +18,11 @@ namespace UnityEditor.Rendering.LookDev
 
         event Action OnRenderDocAcquisitionTriggered;
         
-        event Action<IMouseEvent> OnMouseEventInViewPort;
+        event Action<IMouseEvent> OnMouseEventInView;
 
         event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingObjectInView;
-        event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingEnvironmentInView;
-
-
+        event Action<UnityEngine.Object, ViewCompositionIndex, Vector2> OnChangingEnvironmentInView;
+        
         event Action OnClosed;
     }
 
@@ -168,7 +167,8 @@ namespace UnityEditor.Rendering.LookDev
             remove => OnChangingObjectInViewInternal -= value;
         }
 
-        event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingEnvironmentInViewInternal;
+        event Action<UnityEngine.Object, ViewCompositionIndex, Vector2> OnChangingEnvironmentInViewInternal;
+        event Action<UnityEngine.Object, ViewCompositionIndex, Vector2> IViewDisplayer.OnChangingEnvironmentInView
         {
             add => OnChangingEnvironmentInViewInternal += value;
             remove => OnChangingEnvironmentInViewInternal -= value;
@@ -196,8 +196,8 @@ namespace UnityEditor.Rendering.LookDev
             rootVisualElement.Add(m_MainContainer);
 
             CreateViews();
-            CreateDropAreas();
             CreateEnvironment();
+            CreateDropAreas();
         }
 
         void OnDisable() => OnClosedInternal?.Invoke();
@@ -269,6 +269,7 @@ namespace UnityEditor.Rendering.LookDev
 
         void CreateDropAreas()
         {
+            // GameObject or Prefab in view
             new DropArea(new[] { typeof(GameObject) }, m_Views[(int)ViewIndex.First], (obj, localPos) =>
             {
                 if (layout == Layout.CustomSplit || layout == Layout.CustomCircular)
@@ -278,6 +279,17 @@ namespace UnityEditor.Rendering.LookDev
             });
             new DropArea(new[] { typeof(GameObject) }, m_Views[(int)ViewIndex.Second], (obj, localPos)
                 => OnChangingObjectInViewInternal?.Invoke(obj as GameObject, ViewCompositionIndex.Second, localPos));
+
+            // Environment in view
+            new DropArea(new[] { typeof(Environment), typeof(Cubemap) }, m_Views[(int)ViewIndex.First], (obj, localPos) =>
+            {
+                if (layout == Layout.CustomSplit || layout == Layout.CustomCircular)
+                    OnChangingEnvironmentInViewInternal?.Invoke(obj, ViewCompositionIndex.Composite, localPos);
+                else
+                    OnChangingEnvironmentInViewInternal?.Invoke(obj, ViewCompositionIndex.First, localPos);
+            });
+            new DropArea(new[] { typeof(Environment), typeof(Cubemap) }, m_Views[(int)ViewIndex.Second], (obj, localPos)
+                => OnChangingEnvironmentInViewInternal?.Invoke(obj, ViewCompositionIndex.Second, localPos));
         }
 
         void CreateEnvironment()

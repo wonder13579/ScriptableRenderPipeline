@@ -148,6 +148,23 @@ namespace UnityEditor.Rendering.LookDev
                         break;
                 }
             };
+            s_Displayer.OnChangingEnvironmentInView += (obj, index, localPos) =>
+            {
+
+                switch (index)
+                {
+                    case ViewCompositionIndex.First:
+                    case ViewCompositionIndex.Second:
+                        currentContext.GetViewContent((ViewIndex)index).UpdateEnvironment(obj);
+                        PushSceneChangesToRenderer((ViewIndex)index);
+                        break;
+                    case ViewCompositionIndex.Composite:
+                        ViewIndex viewIndex = s_Compositor.GetViewFromComposition(localPos);
+                        currentContext.GetViewContent(viewIndex).UpdateEnvironment(obj);
+                        PushSceneChangesToRenderer(viewIndex);
+                        break;
+                }
+            };
         }
 
         public static void PushSceneChangesToRenderer(ViewIndex index)
