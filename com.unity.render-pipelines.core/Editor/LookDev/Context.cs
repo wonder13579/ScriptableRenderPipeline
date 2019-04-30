@@ -117,30 +117,31 @@ namespace UnityEditor.Rendering.LookDev
         public GameObject viewedInstanceInPreview { get; internal set; }
 
         /// <summary>Update the environment used.</summary>
-        /// <param name="environmentAsset">The new <see cref="Environment"/> to use.</param>
-        public void UpdateEnvironment(Environment environmentAsset)
+        /// <param name="environmentOrCubemapAsset">
+        /// The new <see cref="Environment"/> to use.
+        /// Or the <see cref="Cubemap"/> to use to build a new one.
+        /// Other types will raise an ArgumentException.
+        /// </param>
+        public void UpdateEnvironment(UnityEngine.Object environmentOrCubemapAsset)
         {
             environmentGUID = "";
             environment = null;
-            if (environmentAsset == null || environmentAsset.Equals(null))
+            if (environmentOrCubemapAsset == null || environmentOrCubemapAsset.Equals(null))
                 return;
 
-            environmentGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(environmentAsset));
-            environment = environmentAsset;
-        }
+            if (!(environmentOrCubemapAsset is Environment)
+                && !(environmentOrCubemapAsset is Cubemap))
+                throw new System.ArgumentException("Only Environment or Cubemap accepted for environmentOrCubemapAsset parameter");
 
-        /// <summary>Update the environment used.</summary>
-        /// <param name="environmentAsset">The <see cref="Cubemap"/> to build a new <see cref="Environment"/>.</param>
-        public void UpdateEnvironment(Cubemap cubemapAsset)
-        {
-            environmentGUID = "";
-            environment = null;
-            if (cubemapAsset == null || cubemapAsset.Equals(null))
-                return;
 
-            environmentGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(cubemapAsset));
-            environment = new Environment();
-            environment.sky.cubemap = cubemapAsset;
+            environmentGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(environmentOrCubemapAsset));
+            if (environmentOrCubemapAsset is Environment)
+                environment = environmentOrCubemapAsset as Environment;
+            else //Cubemap
+            {
+                environment = new Environment();
+                environment.sky.cubemap = environmentOrCubemapAsset as Cubemap;
+            }
         }
 
         void LoadEnvironmentFromGUID()
