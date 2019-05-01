@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [5.14.0] - 2019-XX-XX
+### Fixed
+- When you create a new empty Sub Graph, it no longer shows a warning about a missing output.
+- When you create outputs that start with a digit, Shader generation no longer fails.
+- You can no longer add nodes that are not allowed into Sub Graphs.
+- A graph must now always contain at least one Master Node.
+- Duplicate output names are now allowed.
+- Fixed an issue where the main preview was always redrawing.
+- When you set a Master Node as active, the Main Preview now shows the correct result.
 
 ## [5.13.0] - 2019-04-15
 
