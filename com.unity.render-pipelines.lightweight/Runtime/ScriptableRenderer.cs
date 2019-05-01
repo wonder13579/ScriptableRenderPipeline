@@ -20,6 +20,48 @@ namespace UnityEngine.Rendering.LWRP
     /// </summary>
     public abstract class ScriptableRenderer
     {
+        static class PerFrameConstantNames
+        {
+            public static int _Time = Shader.PropertyToID("_Time");
+            public static int _SinTime = Shader.PropertyToID("_SinTime");
+            public static int _CosTime = Shader.PropertyToID("_CosTime");
+            public static int unity_DeltaTime = Shader.PropertyToID("unity_DeltaTime");
+        }
+
+        class PerFrameConstants
+        {
+            public Vector4 time;
+            public Vector4 sinTime;
+            public Vector4 cosTime;
+            public Vector4 deltaTime;
+
+            public PerFrameConstants()
+            {
+                time = Time.time * new Vector4(1f / 20f, 1f, 2f, 1f);
+                sinTime = new Vector4(Mathf.Sin(Time.time / 8f), Mathf.Sin(Time.time / 4f), Mathf.Sin(Time.time / 2f), Mathf.Sin(Time.time));
+                cosTime = new Vector4(Mathf.Cos(Time.time / 8f), Mathf.Cos(Time.time / 4f), Mathf.Cos(Time.time / 2f), Mathf.Cos(Time.time));
+                deltaTime = new Vector4(Time.deltaTime, 1f / Time.deltaTime, Time.smoothDeltaTime, 1f / Time.smoothDeltaTime);
+            }
+
+            public void SetShaderValues(CommandBuffer cmd)
+            {
+                if (cmd == null)
+                {
+                    Shader.SetGlobalVector(PerFrameConstantNames._Time, time);
+                    Shader.SetGlobalVector(PerFrameConstantNames._SinTime, sinTime);
+                    Shader.SetGlobalVector(PerFrameConstantNames._CosTime, cosTime);
+                    Shader.SetGlobalVector(PerFrameConstantNames.unity_DeltaTime, deltaTime);
+                }
+                else
+                {
+                    cmd.SetGlobalVector(PerFrameConstantNames._Time, time);
+                    cmd.SetGlobalVector(PerFrameConstantNames._SinTime, sinTime);
+                    cmd.SetGlobalVector(PerFrameConstantNames._CosTime, cosTime);
+                    cmd.SetGlobalVector(PerFrameConstantNames.unity_DeltaTime, deltaTime);
+                }
+            }
+        }
+
         public RenderTargetIdentifier cameraColorTarget
         {
             get => m_CameraColorTarget;
@@ -45,7 +87,7 @@ namespace UnityEngine.Rendering.LWRP
         RenderTargetIdentifier m_CameraColorTarget;
         RenderTargetIdentifier m_CameraDepthTarget;
         bool m_FirstCameraRenderPassExecuted = false;
-        
+
         const string k_ClearRenderStateTag = "Clear Render State";
         const string k_SetRenderTarget = "Set RenderTarget";
         const string k_ReleaseResourcesTag = "Release Resources";
@@ -68,6 +110,7 @@ namespace UnityEngine.Rendering.LWRP
                 feature.Create();
                 m_RendererFeatures.Add(feature);
             }
+
             Clear();
         }
 
@@ -132,6 +175,10 @@ namespace UnityEngine.Rendering.LWRP
             ClearRenderState(context);
 
             SortStable(m_ActiveRenderPassQueue);
+
+            // Set time variables
+            PerFrameConstants perFrameConstants = new PerFrameConstants();
+            perFrameConstants.SetShaderValues(null);
 
             // Before Render Block. This render blocks always execute in mono rendering.
             // Camera is not setup. Lights are not setup.
