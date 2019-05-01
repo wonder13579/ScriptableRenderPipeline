@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - When you rapidly perform an undo or redo, Shader Graph windows no longer break.
 - Sub Graphs that contain references to non-existing Sub Graphs no longer break the Sub Graph Importer.
 - You can now reference sub-assets such as Textures.
+- When creating a new empty subgraph, it no longer shows a warning regarding a missing output.
+- When creating outputs that starts with a digit, it no longer fails the shader generation.
+- Nodes that are not allowed into subgraphs cannot be added any more.
+- A graph must now always contain at least one Master Node.
+- Duplicate output names are now allowed.
+- Fixed an issue where the main preview was always redrawing.
+- Setting a Master Node as active is now showing the correct result in the Main Preview.
 
 ## [6.6.0] - 2019-04-01
 ### Added
