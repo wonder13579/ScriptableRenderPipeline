@@ -281,8 +281,8 @@ namespace UnityEditor.ShaderGraph.Drawing
             UpdateShaders();
             UpdateTimedNodeList();
 
-            m_NodesToDraw.UnionWith(m_TimedNodes);
             PropagateNodeList(m_NodesToDraw, PropagationDirection.Downstream);
+            m_NodesToDraw.UnionWith(m_TimedNodes);
 
             foreach (var node in m_NodesToDraw)
             {
@@ -464,6 +464,7 @@ namespace UnityEditor.ShaderGraph.Drawing
                 m_TimedNodes.Add(timeNode);
             }
 
+            PropagateNodeList(m_TimedNodes, PropagationDirection.Downstream);
             m_RefreshTimedNodes = false;
         }
 
