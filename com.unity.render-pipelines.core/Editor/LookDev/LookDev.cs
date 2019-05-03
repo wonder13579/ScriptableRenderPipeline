@@ -79,7 +79,7 @@ namespace UnityEditor.Rendering.LookDev
                 InternalEditorUtility.SaveToSerializedFileAndForget(new[] { currentContext }, path, true);
         }
 
-        [MenuItem("Window/Experimental/NEW Look Dev", false, -1)]
+        //[MenuItem("Window/Experimental/Look Dev", false, -1)]
         public static void Open()
         {
             s_Displayer = EditorWindow.GetWindow<DisplayWindow>();
