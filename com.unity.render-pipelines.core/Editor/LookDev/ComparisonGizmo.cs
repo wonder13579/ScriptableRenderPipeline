@@ -112,6 +112,9 @@ namespace UnityEditor.Rendering.LookDev
                             state.blendFactor = Mathf.Clamp(distanceToOrthoPlane, -1.0f, 1.0f);
                             break;
                     }
+                    if (selected != Selected.None)
+                        LookDev.SaveConfig();
+
                     (mouseEvent as MouseMoveEvent).StopImmediatePropagation();
                 }
                 //let event be propagated elsewhere as we do not catch it for manipulation

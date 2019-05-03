@@ -72,6 +72,7 @@ namespace UnityEditor.Rendering.LookDev
         /// <param name="renderSettings">The parameters to use</param>
         public void ChangeRenderSettings(CustomRenderSettings renderSettings)
         {
+            //[TODO: to remove]
             // Setup default render settings for this preview scene
             //false if
             //  - scene is not loaded

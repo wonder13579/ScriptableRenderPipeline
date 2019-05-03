@@ -33,9 +33,9 @@ namespace UnityEditor.Rendering.LookDev
         public float blendFactorMinGizmoDistance
             => length - circleRadius - blendFactorCircleRadiusSelected;
 
-        public ComparisonGizmoState()
+        internal void Init()
             => Update(center, length, angle);
-
+        
         //TODO: optimize
         private Vector4 Get2DPlane(Vector2 firstPoint, float angle)
         {

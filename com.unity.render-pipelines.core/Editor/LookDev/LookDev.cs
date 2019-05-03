@@ -19,11 +19,20 @@ namespace UnityEditor.Rendering.LookDev
         static Compositer s_Compositor;
         static StageCache s_Stages;
         static ComparisonGizmo s_Comparator;
+        static Context s_CurrentContext;
 
         static IDataProvider dataProvider
             => RenderPipelineManager.currentPipeline as IDataProvider;
 
-        public static Context currentContext { get; private set; }
+        public static Context currentContext
+        {
+            //Lazy init: load it when needed instead in static even if you do not support lookdev
+            get => s_CurrentContext ?? (s_CurrentContext = LoadConfigInternal() ?? defaultContext);
+            private set => s_CurrentContext = value;
+        }
+
+        static Context defaultContext
+            => UnityEngine.ScriptableObject.CreateInstance<Context>();
 
         public static EnvironmentLibrary currentEnvironmentLibrary { get; private set; }
 
@@ -37,21 +46,20 @@ namespace UnityEditor.Rendering.LookDev
         /// </summary>
         public static bool supported => dataProvider != null;
         
-        static LookDev()
-            => currentContext = LoadConfigInternal() ?? GetDefaultContext();
-
-        static Context GetDefaultContext()
-            => UnityEngine.ScriptableObject.CreateInstance<Context>();
-
         public static void ResetConfig()
-            => currentContext = GetDefaultContext();
+            => currentContext = defaultContext;
 
         static Context LoadConfigInternal(string path = lastRenderingDataSavePath)
         {
             var objs = InternalEditorUtility.LoadSerializedFileAndForget(path);
             var last = (objs.Length > 0 ? objs[0] : null) as Context;
             if (last != null && !last.Equals(null))
-                return ((Context)last);
+            {
+                Context context = (Context)last;
+                //recompute non serialized computes states
+                context.layout.gizmoState.Init(); 
+                return context;
+            }
             return null;
         }
 

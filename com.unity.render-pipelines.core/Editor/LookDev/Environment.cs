@@ -14,7 +14,7 @@ namespace UnityEditor.Rendering.LookDev
             public Cubemap cubemap; //[TODO: check]
             // Setup default position to be on the sun in the default HDRI.
             // This is important as the defaultHDRI don't call the set brightest spot function on first call.
-            public float angleOffset = 0.0f;
+            public float angleOffset = 0.0f; //[TODO: sync with sky]
             //public SphericalHarmonicsL2 shadowAmbientProbe; //[TODO: check interest for shadow]
             [SerializeField]
             private float m_Latitude = 60.0f; // [-90..90]
