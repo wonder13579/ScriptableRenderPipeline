@@ -1,25 +1,19 @@
 namespace UnityEngine.Rendering.LookDev
 {
+
+    //IMPORTANT: LookDev is still experimental. Use it at your own risk.
+    //Notably known issue: there is no isolation for volume at the moment that could cause leaks in rendering.
+
     public interface IDataProvider
     {
         void FirstInit(StageRuntimeInterface stage);
-        CustomRenderSettings GetEnvironmentSetup();
         void UpdateSky(Camera camera, Cubemap skybox, StageRuntimeInterface stage);
-    }
-
-    public struct CustomRenderSettings
-    {
-        public DefaultReflectionMode defaultReflectionMode;
-        public Cubemap customReflection;
-        public Material skybox;
-        public AmbientMode ambientMode;
     }
 
     /// <summary>Runtime link to reflect some Stage functionality for SRP editing</summary>
     public class StageRuntimeInterface
     {
         System.Func<bool, GameObject> m_AddGameObject;
-
         System.Func<Camera> m_GetCamera;
 
         public StageRuntimeInterface(System.Func<bool, GameObject> AddGameObject, System.Func<Camera> GetCamera)

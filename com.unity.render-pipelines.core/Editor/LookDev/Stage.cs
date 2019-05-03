@@ -67,31 +67,6 @@ namespace UnityEditor.Rendering.LookDev
         }
 
         /// <summary>
-        /// Change the renderSettings to use in this scene.
-        /// </summary>
-        /// <param name="renderSettings">The parameters to use</param>
-        public void ChangeRenderSettings(CustomRenderSettings renderSettings)
-        {
-            //[TODO: to remove]
-            // Setup default render settings for this preview scene
-            //false if
-            //  - scene is not loaded
-            //  - application cannot update
-            //  - scene do not have a LevelGameManager for RenderSettings
-            if (Unsupported.SetOverrideRenderSettings(m_PreviewScene))
-            {
-                RenderSettings.defaultReflectionMode = renderSettings.defaultReflectionMode;
-                RenderSettings.customReflection = renderSettings.customReflection;
-                RenderSettings.skybox = renderSettings.skybox;
-                RenderSettings.ambientMode = renderSettings.ambientMode;
-                Unsupported.useScriptableRenderPipeline = true;
-                Unsupported.RestoreOverrideRenderSettings();
-            }
-            else
-                throw new System.Exception("Stage's scene was not created correctly");
-        }
-
-        /// <summary>
         /// Move a GameObject into the stage's scene at origin.
         /// </summary>
         /// <param name="gameObject">The gameObject to move.</param>
@@ -279,9 +254,6 @@ namespace UnityEditor.Rendering.LookDev
             }
 
             dataProvider.FirstInit(stage.runtimeInterface);
-            CustomRenderSettings renderSettings = dataProvider.GetEnvironmentSetup();
-            stage.ChangeRenderSettings(renderSettings);
-
             return stage;
         }
 
