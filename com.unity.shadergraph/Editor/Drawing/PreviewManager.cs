@@ -661,7 +661,7 @@ Shader ""hidden/preview""
         {
             var existingId = Get(m_Identifiers, id.index);
             if (existingId.valid && existingId.version != id.version)
-                throw new Exception("Identifier version mismatch");
+                throw new InvalidOperationException($"Identifier version mismatch at index {id.index}: {id.version} != {existingId.version}");
             return Get(list, id.index);
         }
 
@@ -674,7 +674,7 @@ Shader ""hidden/preview""
         {
             var existingId = Get(m_Identifiers, id.index);
             if (existingId.valid && existingId.version != id.version)
-                throw new Exception("Identifier version mismatch");
+                throw new InvalidOperationException($"Identifier version mismatch at index {id.index}: {id.version} != {existingId.version}");
             Set(list, id.index, value);
         }
 
@@ -690,7 +690,7 @@ Shader ""hidden/preview""
         {
             var value = Get(m_RenderDatas, id);
             if (value != null && value.shaderData.node.tempId.version != id.version)
-                throw new Exception("Trying to access render data of a previous version of a node");
+                throw new InvalidOperationException("Trying to access render data of a previous version of a node");
             return value;
         }
     }
