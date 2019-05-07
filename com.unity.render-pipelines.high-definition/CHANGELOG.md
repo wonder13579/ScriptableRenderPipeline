@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed issue with decal that wheren't working currently in player
 - Fixed missing stereo rendering macros in some fragment shaders
 - Fixed exposure for ReflectionProbe and PlanarReflectionProbe gizmos
+- Fixed single-pass instancing on PSVR
+- Fixed Vulkan shader issue with Texture2DArray in ScreenSpaceShadow.compute by re-arranging code (workaround)
+- Fixed camera-relative issue with lights and XR single-pass instancing
+- Fixed single-pass instancing on Vulkan
 - Fixed synchronization issue in decal HTile that occasionally caused rendering artifacts around decal borders, and very noticeable flickering for overlapping decals using shader graph
 
 ### Changed
