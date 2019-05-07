@@ -71,7 +71,7 @@ void GetSurfaceData(FragInputs input, float3 V, PositionInputs posInput, out Dec
 #endif
 	surfaceData.normalWS.xyz = normalWS;
 	surfaceData.normalWS.w = _NormalBlendSrc ? maskMapBlend : albedoMapBlend;
-    if (surfaceData.normalWS.w > 0)
+    if (surfaceData.normalWS.w > 0.0)
     {
         surfaceData.HTileMask |= DBUFFERHTILEBIT_NORMAL;
     }
