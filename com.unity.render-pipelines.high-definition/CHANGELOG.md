@@ -50,7 +50,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed Vulkan shader issue with Texture2DArray in ScreenSpaceShadow.compute by re-arranging code (workaround)
 - Fixed camera-relative issue with lights and XR single-pass instancing
 - Fixed single-pass instancing on Vulkan
-- Fixed synchronization issue in decal HTile that occasionally caused rendering artifacts around decal borders, and very noticeable flickering for overlapping decals using shader graph
+- Fixed htile synchronization issue with shader graph decal [case 1140750](https://fogbugz.unity3d.com/f/cases/1136655/)
+- Fixed synchronization issue in decal HTile that occasionally caused rendering artifacts around decal borders
 
 ### Changed
 - Refactor PixelCoordToViewDirWS to be VR compatible and to compute it only once per frame
