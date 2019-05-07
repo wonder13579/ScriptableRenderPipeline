@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed issue with decal that wheren't working currently in player
 - Fixed missing stereo rendering macros in some fragment shaders
 - Fixed exposure for ReflectionProbe and PlanarReflectionProbe gizmos
+- Fixed synchronization issue in decal HTile that occasionally caused rendering artifacts around decal borders, and very noticeable flickering for overlapping decals using shader graph
 
 ### Changed
 - Refactor PixelCoordToViewDirWS to be VR compatible and to compute it only once per frame
@@ -169,7 +170,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed cascade shadows border sometime causing artefacts between cascades
 - Restored shadows in the Cascade Shadow debug visualization
 - `camera.RenderToCubemap` use proper face culling
-- Fixed synchronization issue in decal HTile that occasionally caused rendering artifacts around decal borders, and very noticeable flickering for overlapping decals using shader graph
 
 ### Changed
 - When rendering reflection probe disable all specular lighting and for metals use fresnelF0 as diffuse color for bake lighting.
