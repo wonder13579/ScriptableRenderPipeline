@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace UnityEditor.Rendering.LookDev
 {
-    [CreateAssetMenu(fileName = "Environment", menuName = "LookDev/Environment", order = 1)]
+    //[CreateAssetMenu(fileName = "Environment", menuName = "LookDev/Environment", order = 1)]
     public class Environment : ScriptableObject
     {
         [Serializable]
@@ -64,7 +64,7 @@ namespace UnityEditor.Rendering.LookDev
         public Shadow shadow = new Shadow();
     }
 
-    [CreateAssetMenu(fileName = "EnvironmentLibrary", menuName = "LookDev/EnvironmentLibrary", order = 1)]
+    //[CreateAssetMenu(fileName = "EnvironmentLibrary", menuName = "LookDev/EnvironmentLibrary", order = 1)]
     public class EnvironmentLibrary : ScriptableObject
     {
         [field: SerializeField]
