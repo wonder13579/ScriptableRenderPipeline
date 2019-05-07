@@ -5,7 +5,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     public class DBufferManager : MRTBufferManager
     {
         public bool enableDecals { get; set; }
-        public bool supportsHTile { get; set; }
 
         RTHandleSystem.RTHandle m_HTile;
 
@@ -33,17 +32,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 m_TextureShaderIDs[dbufferIndex] = HDShaderIDs._DBufferTexture[dbufferIndex];
             }
 
-            supportsHTile = SystemInfo.IsFormatSupported(GraphicsFormat.R32_UInt, FormatUsage.LoadStore);
-            if(supportsHTile)
-            {
-                // We use 8x8 tiles in order to match the native GCN HTile as closely as possible.
-                m_HTile = RTHandles.Alloc(size => new Vector2Int((size.x + 7) / 8, (size.y + 7) / 8), filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R32_UInt, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "DBufferHTile"); // Enable UAV            
-            }
-            else
-            {
-                // create dummy HTile because we can not eliminate it from the shader at compile time
-                m_HTile = RTHandles.Alloc(size => new Vector2Int(8, 8), filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R8_UNorm, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "DBufferHTile"); // Enable UAV           
-            }
+            // We use 8x8 tiles in order to match the native GCN HTile as closely as possible.
+            m_HTile = RTHandles.Alloc(size => new Vector2Int((size.x + 7) / 8, (size.y + 7) / 8), filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R32_UInt, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "DBufferHTile"); // Enable UAV            
         }
 
         override public void DestroyBuffers()
@@ -78,11 +68,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 RTIDs[3] = m_RTs[3].nameID;
             }
             HDUtils.SetRenderTarget(cmd, m_HTile, ClearFlag.Color, Color.clear);
-
-            if (supportsHTile) // only clear if we use it
-            {
-                HDUtils.SetRenderTarget(cmd, m_HTile, ClearFlag.Color, Color.clear);
-            }
 
             // this actually sets the MRTs and HTile RWTexture, this is done separately because we do not have an api to clear MRTs to different colors
             HDUtils.SetRenderTarget(cmd, RTIDs, cameraDepthStencilBuffer); // do not clear anymore

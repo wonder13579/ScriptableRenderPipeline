@@ -286,16 +286,7 @@ DecalSurfaceData GetDecalSurfaceData(PositionInputs posInput, inout float alpha)
 
     }
 #else // _SURFACE_TYPE_TRANSPARENT
-    if (_DecalsHtileSupport)
-    {
-        mask = (uint)LOAD_TEXTURE2D_X(_DecalHTileTexture, posInput.positionSS / 8).r; // this results in a warning, no idea why....
-    }
-    else
-    {
-        mask = DBUFFERHTILEBIT_DIFFUSE | DBUFFERHTILEBIT_NORMAL | DBUFFERHTILEBIT_MASK;
-    }
-
-    
+    mask = (uint)LOAD_TEXTURE2D_X(_DecalHTileTexture, posInput.positionSS / 8).r; 
 #endif
     DecalSurfaceData decalSurfaceData;
     DECODE_FROM_DBUFFER(DBuffer, decalSurfaceData);
