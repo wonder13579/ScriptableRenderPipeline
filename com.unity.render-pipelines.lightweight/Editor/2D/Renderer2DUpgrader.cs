@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace UnityEditor.Experimental.Rendering.LWRP
 {
-    static class _2DRendererUpgrader
+    static class Renderer2DUpgrader
     {
         static Material s_SpriteLitDefault = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.lightweight/Runtime/Materials/Sprite-Lit-Default.mat");
 

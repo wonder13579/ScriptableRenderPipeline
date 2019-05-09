@@ -8,7 +8,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP.Analytics
     struct AnalyticsDataTypes
     {
         public const string k_LightDataString = "u2drendererlights";
-        public const string k_2DRendererDataString = "u2drendererdata";
+        public const string k_Renderer2DDataString = "u2drendererdata";
     }
 
     internal interface IAnalyticsData { };
@@ -45,20 +45,20 @@ namespace UnityEditor.Experimental.Rendering.LWRP.Analytics
     }
 
     [InitializeOnLoad]
-    internal class _2DRendererAnalytics : IAnalytics
+    internal class Renderer2DAnalytics : IAnalytics
     {
         const int k_MaxEventsPerHour = 1000;
         const int k_MaxNumberOfElements = 1000;
         const string k_VendorKey = "unity.renderpipelines.lightweight.editor";
         const int k_Version = 1;
-        static _2DRendererAnalytics m_Instance = new _2DRendererAnalytics();
+        static Renderer2DAnalytics m_Instance = new Renderer2DAnalytics();
         static bool s_Initialize = false;
-        public static _2DRendererAnalytics instance
+        public static Renderer2DAnalytics instance
         {
             get
             {
                 if (m_Instance == null)
-                    m_Instance = new _2DRendererAnalytics();
+                    m_Instance = new Renderer2DAnalytics();
 
                 return m_Instance;
             }
@@ -70,7 +70,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP.Analytics
             if (false == s_Initialize)
             {
                 EditorAnalytics.RegisterEventWithLimit(AnalyticsDataTypes.k_LightDataString, k_MaxEventsPerHour, k_MaxNumberOfElements, k_VendorKey, k_Version);
-                EditorAnalytics.RegisterEventWithLimit(AnalyticsDataTypes.k_2DRendererDataString, k_MaxEventsPerHour, k_MaxNumberOfElements, k_VendorKey, k_Version);
+                EditorAnalytics.RegisterEventWithLimit(AnalyticsDataTypes.k_Renderer2DDataString, k_MaxEventsPerHour, k_MaxNumberOfElements, k_VendorKey, k_Version);
                 s_Initialize = true;
             }
 

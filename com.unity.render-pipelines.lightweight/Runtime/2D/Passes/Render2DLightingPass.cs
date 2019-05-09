@@ -8,14 +8,14 @@ namespace UnityEngine.Experimental.Rendering.LWRP
     internal class Render2DLightingPass : ScriptableRenderPass
     {
         static SortingLayer[] s_SortingLayers;
-        _2DRendererData m_RendererData;
+        Renderer2DData m_RendererData;
         static readonly ShaderTagId k_CombinedRenderingPassName = new ShaderTagId("CombinedShapeLight");
         static readonly ShaderTagId k_NormalsRenderingPassName = new ShaderTagId("NormalsRendering");
         static readonly ShaderTagId k_LegacyPassName = new ShaderTagId("SRPDefaultUnlit");
         static readonly List<ShaderTagId> k_ShaderTags = new List<ShaderTagId>() { k_LegacyPassName, k_CombinedRenderingPassName };
         //static readonly List<ShaderTagId> k_ShaderTags = new List<ShaderTagId>() { k_CombinedRenderingPassName };
 
-        public Render2DLightingPass(_2DRendererData rendererData)
+        public Render2DLightingPass(Renderer2DData rendererData)
         {
             if (s_SortingLayers == null)
                 s_SortingLayers = SortingLayer.layers;

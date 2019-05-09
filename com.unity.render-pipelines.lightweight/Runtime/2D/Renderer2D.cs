@@ -3,14 +3,14 @@ using UnityEngine.Rendering.LWRP;
 
 namespace UnityEngine.Experimental.Rendering.LWRP
 {
-    internal class _2DRenderer : ScriptableRenderer
+    internal class Renderer2D : ScriptableRenderer
     {
         Render2DLightingPass m_Render2DLightingPass;
         PostProcessPass m_PostProcessPass;
         FinalBlitPass m_FinalBlitPass;
         RenderTargetHandle m_ColorTargetHandle;
 
-        public _2DRenderer(_2DRendererData data) : base(data)
+        public Renderer2D(Renderer2DData data) : base(data)
         {
             m_Render2DLightingPass = new Render2DLightingPass(data);
             m_PostProcessPass = new PostProcessPass(RenderPassEvent.BeforeRenderingPostProcessing);

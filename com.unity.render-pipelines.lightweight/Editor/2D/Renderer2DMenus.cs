@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 
 namespace UnityEditor.Experimental.Rendering.LWRP
 {
-    static class _2DRendererMenus
+    static class Renderer2DMenus
     {
         internal static void PlaceGameObjectInFrontOfSceneView(GameObject go)
         {
@@ -66,7 +66,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP
             lightData.was_create_event = true;
             lightData.instance_id = light2D.GetInstanceID();
             lightData.light_type = light2D.lightType;
-            Analytics._2DRendererAnalytics.instance.SendData(Analytics.AnalyticsDataTypes.k_LightDataString, lightData);
+            Analytics.Renderer2DAnalytics.instance.SendData(Analytics.AnalyticsDataTypes.k_LightDataString, lightData);
         }
 
         static bool CreateLightValidation()
@@ -75,7 +75,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP
             if (pipeline != null)
             {
                 LightweightRenderPipelineAsset asset = LightweightRenderPipeline.asset;
-                _2DRendererData assetData = asset.scriptableRendererData as _2DRendererData;
+                Renderer2DData assetData = asset.scriptableRendererData as Renderer2DData;
                 if (assetData != null)
                     return true;
             }
@@ -144,14 +144,14 @@ namespace UnityEditor.Experimental.Rendering.LWRP
         [MenuItem("Assets/Create/Rendering/Lightweight Render Pipeline/2D Renderer", priority = CoreUtils.assetCreateMenuPriority1 + 1)]
         static void Create2DRendererData()
         {
-            _2DRendererData.Create2DRendererData((instance) =>
+            Renderer2DData.Create2DRendererData((instance) =>
             {
                 Analytics.RendererAssetData modifiedData = new Analytics.RendererAssetData();
                 modifiedData.instance_id = instance.GetInstanceID();
                 modifiedData.was_create_event = true;
                 modifiedData.blending_layers_count = 1;
                 modifiedData.blending_modes_used = 2;
-                Analytics._2DRendererAnalytics.instance.SendData(Analytics.AnalyticsDataTypes.k_2DRendererDataString, modifiedData);
+                Analytics.Renderer2DAnalytics.instance.SendData(Analytics.AnalyticsDataTypes.k_Renderer2DDataString, modifiedData);
             });
         }
     }

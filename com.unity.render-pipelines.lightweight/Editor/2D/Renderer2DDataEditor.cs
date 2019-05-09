@@ -3,8 +3,8 @@ using UnityEngine.Experimental.Rendering.LWRP;
 
 namespace UnityEditor.Experimental.Rendering.LWRP
 {
-    [CustomEditor(typeof(_2DRendererData), true)]
-    internal class _2DRendererDataEditor : Editor
+    [CustomEditor(typeof(Renderer2DData), true)]
+    internal class Renderer2DDataEditor : Editor
     {
         class Styles
         {
@@ -34,11 +34,11 @@ namespace UnityEditor.Experimental.Rendering.LWRP
         SerializedProperty m_LightBlendStyles;
         LightBlendStyleProps[] m_LightBlendStylePropsArray;
 
-        Analytics._2DRendererAnalytics m_Analytics = Analytics._2DRendererAnalytics.instance;
-        _2DRendererData m_2DRendererData;
+        Analytics.Renderer2DAnalytics m_Analytics = Analytics.Renderer2DAnalytics.instance;
+        Renderer2DData m_Renderer2DData;
         bool m_WasModified;
 
-        int GetNumberOfUsedBlendingLayers(_2DRendererData rendererData)
+        int GetNumberOfUsedBlendingLayers(Renderer2DData rendererData)
         {
             int count = 0;
             foreach (var lightBlendStyle in rendererData.lightBlendStyles)
@@ -50,7 +50,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP
             return count;
         }
 
-        int GetBlendingModesUsed(_2DRendererData rendererData)
+        int GetBlendingModesUsed(Renderer2DData rendererData)
         {
             int modesUsed = 0;
             foreach (var lightBlendStyle in rendererData.lightBlendStyles)
@@ -67,18 +67,18 @@ namespace UnityEditor.Experimental.Rendering.LWRP
             if (m_WasModified)
             {
                 Analytics.RendererAssetData modifiedData = new Analytics.RendererAssetData();
-                modifiedData.instance_id = m_2DRendererData.GetInstanceID();
+                modifiedData.instance_id = m_Renderer2DData.GetInstanceID();
                 modifiedData.was_create_event = false;
-                modifiedData.blending_layers_count = GetNumberOfUsedBlendingLayers(m_2DRendererData);
-                modifiedData.blending_modes_used = GetBlendingModesUsed(m_2DRendererData);
-                analytics.SendData(Analytics.AnalyticsDataTypes.k_2DRendererDataString, modifiedData);
+                modifiedData.blending_layers_count = GetNumberOfUsedBlendingLayers(m_Renderer2DData);
+                modifiedData.blending_modes_used = GetBlendingModesUsed(m_Renderer2DData);
+                analytics.SendData(Analytics.AnalyticsDataTypes.k_Renderer2DDataString, modifiedData);
             }
         }
 
         void OnEnable()
         {
             m_WasModified = false;
-            m_2DRendererData = (_2DRendererData)serializedObject.targetObject;
+            m_Renderer2DData = (Renderer2DData)serializedObject.targetObject;
 
             m_HDREmulationScale = serializedObject.FindProperty("m_HDREmulationScale");
             m_LightBlendStyles = serializedObject.FindProperty("m_LightBlendStyles");

@@ -147,7 +147,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP
 
         HeaderModifier m_HeaderModifier;
 
-        Analytics._2DRendererAnalytics m_Analytics;
+        Analytics.Renderer2DAnalytics m_Analytics;
         HashSet<Light2D> m_ModifiedLights;
 
         private void AnalyticsTrackChanges(SerializedObject serializedObject)
@@ -187,7 +187,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP
 
         void OnEnable()
         {
-            m_Analytics = Analytics._2DRendererAnalytics.instance;
+            m_Analytics = Analytics.Renderer2DAnalytics.instance;
             m_ModifiedLights = new HashSet<Light2D>();
             m_LightType = serializedObject.FindProperty("m_LightType");
             m_LightColor = serializedObject.FindProperty("m_Color");
@@ -221,7 +221,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP
             var blendStyleIndices = new List<int>();
             var blendStyleNames = new List<string>();
             var pipelineAsset = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset as LightweightRenderPipelineAsset;
-            var rendererData = pipelineAsset != null ? pipelineAsset.scriptableRendererData as _2DRendererData : null;
+            var rendererData = pipelineAsset != null ? pipelineAsset.scriptableRendererData as Renderer2DData : null;
             if (rendererData != null)
             {
                 for (int i = 0; i < rendererData.lightBlendStyles.Length; ++i)
@@ -264,13 +264,13 @@ namespace UnityEditor.Experimental.Rendering.LWRP
             }
         }
 
-        internal void SendModifiedAnalytics(Analytics._2DRendererAnalytics analytics, Light2D light)
+        internal void SendModifiedAnalytics(Analytics.Renderer2DAnalytics analytics, Light2D light)
         {
             Analytics.Light2DData lightData = new Analytics.Light2DData();
             lightData.was_create_event = false;
             lightData.instance_id = light.GetInstanceID();
             lightData.light_type = light.lightType;
-            Analytics._2DRendererAnalytics.instance.SendData(Analytics.AnalyticsDataTypes.k_LightDataString, lightData);
+            Analytics.Renderer2DAnalytics.instance.SendData(Analytics.AnalyticsDataTypes.k_LightDataString, lightData);
         }
 
         private void OnDestroy()
@@ -673,7 +673,7 @@ namespace UnityEditor.Experimental.Rendering.LWRP
             }
 
             LightweightRenderPipelineAsset asset = LightweightRenderPipeline.asset;
-            _2DRendererData assetData = asset.scriptableRendererData as _2DRendererData; 
+            Renderer2DData assetData = asset.scriptableRendererData as Renderer2DData; 
             if(assetData == null)
             {
                 EditorGUILayout.HelpBox(Styles.asset2DUnassignedWarning);

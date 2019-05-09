@@ -11,7 +11,7 @@ using UnityEditor.ProjectWindowCallback;
 
 namespace UnityEngine.Experimental.Rendering.LWRP
 {
-    public class _2DRendererData : ScriptableRendererData
+    public class Renderer2DData : ScriptableRendererData
     {
         [SerializeField]
         float m_HDREmulationScale = 1;
@@ -45,11 +45,11 @@ namespace UnityEngine.Experimental.Rendering.LWRP
 
         protected override ScriptableRenderer Create()
         {
-            return new _2DRenderer(this);
+            return new Renderer2D(this);
         }
 
 #if UNITY_EDITOR
-        internal static void Create2DRendererData(Action<_2DRendererData> onCreatedCallback)
+        internal static void Create2DRendererData(Action<Renderer2DData> onCreatedCallback)
         {
             var instance = CreateInstance<Create2DRendererDataAsset>();
             instance.onCreated += onCreatedCallback;
@@ -58,11 +58,11 @@ namespace UnityEngine.Experimental.Rendering.LWRP
 
         class Create2DRendererDataAsset : EndNameEditAction
         {
-            public event Action<_2DRendererData> onCreated;
+            public event Action<Renderer2DData> onCreated;
 
             public override void Action(int instanceId, string pathName, string resourceFile)
             {
-                var instance = CreateInstance<_2DRendererData>();
+                var instance = CreateInstance<Renderer2DData>();
                 instance.OnCreate();
                 AssetDatabase.CreateAsset(instance, pathName);
                 Selection.activeObject = instance;

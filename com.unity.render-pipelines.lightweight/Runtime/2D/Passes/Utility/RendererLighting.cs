@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             "USE_SHAPE_LIGHT_TYPE_3"
         };
 
-        static _2DRendererData s_RendererData;
+        static Renderer2DData s_RendererData;
         static Light2DBlendStyle[] s_BlendStyles;
         static RenderTargetHandle[] s_RenderTargets;
         static bool[] s_RenderTargetsDirty;
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
         static Texture s_FalloffLookupTexture;
         static Material[] s_LightMaterials;
 
-        static public void Setup(_2DRendererData rendererData)
+        static public void Setup(Renderer2DData rendererData)
         {
             s_RendererData = rendererData;
             s_BlendStyles = rendererData.lightBlendStyles;
