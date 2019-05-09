@@ -111,6 +111,9 @@ namespace UnityEngine.Rendering.LWRP
         {
             foreach (var feature in data.rendererFeatures)
             {
+                if (feature == null)
+                    continue;
+
                 feature.Create();
                 m_RendererFeatures.Add(feature);
             }
