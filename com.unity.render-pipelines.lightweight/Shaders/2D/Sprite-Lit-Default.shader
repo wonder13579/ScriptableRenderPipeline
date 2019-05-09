@@ -31,74 +31,74 @@ Shader "Lightweight Render Pipeline/2D/Sprite-Lit-Default"
             #pragma multi_compile USE_SHAPE_LIGHT_TYPE_2 __
             #pragma multi_compile USE_SHAPE_LIGHT_TYPE_3 __
 
-			struct Attributes
-			{
-				float3 positionOS   : POSITION;
-				float4 color		: COLOR;
-				half2  uv			: TEXCOORD0;
-			};
+            struct Attributes
+            {
+                float3 positionOS   : POSITION;
+                float4 color        : COLOR;
+                half2  uv           : TEXCOORD0;
+            };
 
-			struct Varyings
-			{
-				float4  positionCS		: SV_POSITION;
-				float4  color			: COLOR;
-				half2	uv				: TEXCOORD0;
-				half2	lightingUV		: TEXCOORD1;
-			};
+            struct Varyings
+            {
+                float4  positionCS  : SV_POSITION;
+                float4  color       : COLOR;
+                half2	uv          : TEXCOORD0;
+                half2	lightingUV  : TEXCOORD1;
+            };
 
-			#include "Include/LightingUtility.hlsl"
+            #include "Include/LightingUtility.hlsl"
 
-			TEXTURE2D(_MainTex);
-			SAMPLER(sampler_MainTex);
-			TEXTURE2D(_MaskTex);
-			SAMPLER(sampler_MaskTex);
-			TEXTURE2D(_NormalMap);
-			SAMPLER(sampler_NormalMap);
-			half4 _MainTex_ST;
-			half4 _NormalMap_ST;
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            TEXTURE2D(_MaskTex);
+            SAMPLER(sampler_MaskTex);
+            TEXTURE2D(_NormalMap);
+            SAMPLER(sampler_NormalMap);
+            half4 _MainTex_ST;
+            half4 _NormalMap_ST;
 
-			#if USE_SHAPE_LIGHT_TYPE_0
-			SHAPE_LIGHT(0)
-			#endif
+            #if USE_SHAPE_LIGHT_TYPE_0
+            SHAPE_LIGHT(0)
+            #endif
 
-			#if USE_SHAPE_LIGHT_TYPE_1
-			SHAPE_LIGHT(1)
-			#endif
+            #if USE_SHAPE_LIGHT_TYPE_1
+            SHAPE_LIGHT(1)
+            #endif
 
-			#if USE_SHAPE_LIGHT_TYPE_2
-			SHAPE_LIGHT(2)
-			#endif
+            #if USE_SHAPE_LIGHT_TYPE_2
+            SHAPE_LIGHT(2)
+            #endif
 
-			#if USE_SHAPE_LIGHT_TYPE_3
-			SHAPE_LIGHT(3)
-			#endif
+            #if USE_SHAPE_LIGHT_TYPE_3
+            SHAPE_LIGHT(3)
+            #endif
 
-			Varyings CombinedShapeLightVertex(Attributes v)
-			{
-				Varyings o = (Varyings)0;
+            Varyings CombinedShapeLightVertex(Attributes v)
+            {
+                Varyings o = (Varyings)0;
 
-				o.positionCS = TransformObjectToHClip(v.positionOS);
-				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				float4 clipVertex = o.positionCS / o.positionCS.w;
-				o.lightingUV = ComputeScreenPos(clipVertex).xy;
+                o.positionCS = TransformObjectToHClip(v.positionOS);
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                float4 clipVertex = o.positionCS / o.positionCS.w;
+                o.lightingUV = ComputeScreenPos(clipVertex).xy;
 
-				#if UNITY_UV_STARTS_AT_TOP
-				o.lightingUV.y = 1.0 - o.lightingUV.y;
-				#endif
+                #if UNITY_UV_STARTS_AT_TOP
+                o.lightingUV.y = 1.0 - o.lightingUV.y;
+                #endif
 
-				o.color = v.color;
-				return o;
-			}
+                o.color = v.color;
+                return o;
+            }
 
-			#include "Include/CombinedShapeLightShared.hlsl"
+            #include "Include/CombinedShapeLightShared.hlsl"
 
-			half4 CombinedShapeLightFragment(Varyings i) : SV_Target
-			{
-				half4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-				half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
+            half4 CombinedShapeLightFragment(Varyings i) : SV_Target
+            {
+                half4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+                half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
-				return CombinedShapeLightShared(main, mask, i.lightingUV);
-			}
+                return CombinedShapeLightShared(main, mask, i.lightingUV);
+            }
             ENDHLSL
         }
 
@@ -110,54 +110,54 @@ Shader "Lightweight Render Pipeline/2D/Sprite-Lit-Default"
             #pragma vertex NormalsRenderingVertex
             #pragma fragment NormalsRenderingFragment
 
-			struct Attributes
-			{
-				float3 positionOS   : POSITION;
-				float4 color		: COLOR;
-				half2  uv			: TEXCOORD0;
-			};
+            struct Attributes
+            {
+                float3 positionOS   : POSITION;
+                float4 color		: COLOR;
+                half2  uv			: TEXCOORD0;
+            };
 
-			struct Varyings
-			{
-				float4  positionCS		: SV_POSITION;
-				float4  color			: COLOR;
-				half2	uv				: TEXCOORD0;
-				float3  normalWS		: TEXCOORD1;
-				float3  tangentWS		: TEXCOORD2;
-				float3  bitangentWS		: TEXCOORD3;
-			};
+            struct Varyings
+            {
+                float4  positionCS		: SV_POSITION;
+                float4  color			: COLOR;
+                half2	uv				: TEXCOORD0;
+                float3  normalWS		: TEXCOORD1;
+                float3  tangentWS		: TEXCOORD2;
+                float3  bitangentWS		: TEXCOORD3;
+            };
 
-			TEXTURE2D(_MainTex);
-			SAMPLER(sampler_MainTex);
-			TEXTURE2D(_NormalMap);
-			SAMPLER(sampler_NormalMap);
-			float4 _NormalMap_ST;  // Is this the right way to do this?
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            TEXTURE2D(_NormalMap);
+            SAMPLER(sampler_NormalMap);
+            float4 _NormalMap_ST;  // Is this the right way to do this?
 
-			Varyings NormalsRenderingVertex(Attributes attributes)
-			{
-				Varyings o = (Varyings)0;
+            Varyings NormalsRenderingVertex(Attributes attributes)
+            {
+                Varyings o = (Varyings)0;
 
-				o.positionCS = TransformObjectToHClip(attributes.positionOS);
-				#if UNITY_UV_STARTS_AT_TOP
-					o.positionCS.y = -o.positionCS.y;
-				#endif
-				o.uv = TRANSFORM_TEX(attributes.uv, _NormalMap);
-				o.uv = attributes.uv;
-				o.color = attributes.color;
-				o.normalWS = TransformObjectToWorldDir(float3(0, 0, 1));
-				o.tangentWS = TransformObjectToWorldDir(float3(1, 0, 0));
-				o.bitangentWS = TransformObjectToWorldDir(float3(0, 1, 0));
-				return o;
-			}
+                o.positionCS = TransformObjectToHClip(attributes.positionOS);
+                #if UNITY_UV_STARTS_AT_TOP
+                    o.positionCS.y = -o.positionCS.y;
+                #endif
+                o.uv = TRANSFORM_TEX(attributes.uv, _NormalMap);
+                o.uv = attributes.uv;
+                o.color = attributes.color;
+                o.normalWS = TransformObjectToWorldDir(float3(0, 0, 1));
+                o.tangentWS = TransformObjectToWorldDir(float3(1, 0, 0));
+                o.bitangentWS = TransformObjectToWorldDir(float3(0, 1, 0));
+                return o;
+            }
 
-			#include "Include/NormalsRenderingShared.hlsl"
+            #include "Include/NormalsRenderingShared.hlsl"
 
-			float4 NormalsRenderingFragment(Varyings i) : SV_Target
-			{
-				float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-				float3 normalTS = UnpackNormal(SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, i.uv));
-				return NormalsRenderingShared(mainTex, normalTS, i.tangentWS.xyz, i.bitangentWS.xyz, -i.normalWS.xyz);
-			}
+            float4 NormalsRenderingFragment(Varyings i) : SV_Target
+            {
+                float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+                float3 normalTS = UnpackNormal(SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, i.uv));
+                return NormalsRenderingShared(mainTex, normalTS, i.tangentWS.xyz, i.bitangentWS.xyz, -i.normalWS.xyz);
+            }
 
 
             ENDHLSL

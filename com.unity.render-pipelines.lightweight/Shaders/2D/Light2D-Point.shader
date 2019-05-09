@@ -1,10 +1,10 @@
 Shader "Hidden/Light2D-Point"
 {
-	Properties
-	{
-		[HideInInspector] _SrcBlend("__src", Float) = 1.0
-		[HideInInspector] _DstBlend("__dst", Float) = 0.0
-	}
+    Properties
+    {
+        [HideInInspector] _SrcBlend("__src", Float) = 1.0
+        [HideInInspector] _DstBlend("__dst", Float) = 0.0
+    }
 
     SubShader
     {
@@ -12,9 +12,7 @@ Shader "Hidden/Light2D-Point"
 
         Pass
         {
-			//Blend SrcAlpha OneMinusSrcAlpha
-			//Blend One One
-			Blend [_SrcBlend][_DstBlend]
+            Blend [_SrcBlend][_DstBlend]
             ZWrite Off
             Cull Off
 
@@ -24,11 +22,11 @@ Shader "Hidden/Light2D-Point"
             #pragma fragment frag
             #pragma multi_compile_local USE_POINT_LIGHT_COOKIES __
             #pragma multi_compile_local LIGHT_QUALITY_FAST __
-			#pragma multi_compile_local USE_NORMAL_MAP __
-			#pragma multi_compile_local USE_ADDITIVE_BLENDING __
+            #pragma multi_compile_local USE_NORMAL_MAP __
+            #pragma multi_compile_local USE_ADDITIVE_BLENDING __
 
             #include "Packages/com.unity.render-pipelines.lightweight/ShaderLibrary/Core.hlsl"
-			#include "Include/LightingUtility.hlsl"
+            #include "Include/LightingUtility.hlsl"
     
             struct Attributes
             {
@@ -43,7 +41,7 @@ Shader "Hidden/Light2D-Point"
                 float2	lookupUV        : TEXCOORD2;  // This is used for light relative direction
                 float2	lookupNoRotUV   : TEXCOORD3;  // This is used for screen relative direction of a light
 
-				NORMALS_LIGHTING_COORDS(TEXCOORD4, TEXCOORD5)
+                NORMALS_LIGHTING_COORDS(TEXCOORD4, TEXCOORD5)
             };
 
 #if USE_POINT_LIGHT_COOKIES
@@ -59,7 +57,7 @@ Shader "Hidden/Light2D-Point"
             SAMPLER(sampler_LightLookup);
             float4 _LightLookup_TexelSize;
 
-			NORMALS_LIGHTING_VARIABLES
+            NORMALS_LIGHTING_VARIABLES
 
             half4	    _LightColor;
             half4x4	    _LightInvMatrix;
@@ -85,7 +83,7 @@ Shader "Hidden/Light2D-Point"
                 output.lookupUV = 0.5 * (lightSpacePos.xy + 1) + halfTexelOffset;
                 output.lookupNoRotUV = 0.5 * (lightSpaceNoRotPos.xy + 1) + halfTexelOffset;
 
-				TRANSFER_NORMALS_LIGHTING(output, worldSpacePos)
+                TRANSFER_NORMALS_LIGHTING(output, worldSpacePos)
 
                 return output;
             }
@@ -116,14 +114,14 @@ Shader "Hidden/Light2D-Point"
 #endif
 
 #if USE_ADDITIVE_BLENDING
-				lightColor *= attenuation;
+                lightColor *= attenuation;
 #else
-				lightColor.a = attenuation;
+                lightColor.a = attenuation;
 #endif
 
-				APPLY_NORMALS_LIGHTING(input, lightColor);
+                APPLY_NORMALS_LIGHTING(input, lightColor);
 
-				return lightColor * _InverseHDREmulationScale;
+                return lightColor * _InverseHDREmulationScale;
             }
             ENDHLSL
         }
