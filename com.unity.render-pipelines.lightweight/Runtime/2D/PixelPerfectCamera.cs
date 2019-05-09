@@ -162,6 +162,9 @@ namespace UnityEngine.Experimental.Rendering.LWRP
 
         void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
+            if (camera != m_Camera)
+                return;
+
             m_Internal.CalculateCameraProperties(Screen.width, Screen.height);
 
             PixelSnap();
@@ -178,7 +181,8 @@ namespace UnityEngine.Experimental.Rendering.LWRP
 
         void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
         {
-            U2D.PixelPerfectRendering.pixelSnapSpacing = 0.0f;
+            if (camera == m_Camera)
+                U2D.PixelPerfectRendering.pixelSnapSpacing = 0.0f;
         }
 
         void OnEnable()
