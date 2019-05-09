@@ -335,7 +335,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
                 if (!s_BlendStyles[i].enabled)
                     continue;
 
-                string sampleName = "2D Lights - " + s_BlendStyles[i].name;
+                string sampleName = s_BlendStyles[i].name;
                 cmdBuffer.BeginSample(sampleName);
 
                 cmdBuffer.SetRenderTarget(s_RenderTargets[i].Identifier());
@@ -371,7 +371,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
                 if (!s_BlendStyles[i].enabled)
                     continue;
 
-                string sampleName = "2D Shape Light Volumes - " + s_BlendStyles[i].name;
+                string sampleName = s_BlendStyles[i].name;
                 cmdBuffer.BeginSample(sampleName);
 
                 RenderLightVolumeSet(
